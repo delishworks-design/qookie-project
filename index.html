@@ -410,10 +410,6 @@
     <h2 id="setTitle">Settings</h2>
 
     <p class="group-title">General</p>
-    <div class="field">
-      <label for="marginInput">Sales margin (%)</label>
-      <input id="marginInput" type="number" inputmode="decimal" min="0" max="100" step="1">
-    </div>
     <button class="ghost" id="logoutBtn" type="button">Log out</button>
 
     <div class="divider"></div>
@@ -490,7 +486,6 @@
       {id:'k-red',name:'Red Velvet',cat:'cookie',price:25},
       {id:'k-dc',name:'Double Chocolate',cat:'cookie',price:25}
     ],
-    margin:60,
     orders:[],
     deleted:[],
     seq:1,
@@ -531,7 +526,6 @@
     });
     return {
       products:products,
-      margin:Number.isFinite(+p.margin)?Math.max(0,Math.min(100,+p.margin)):DEFAULTS.margin,
       orders:(Array.isArray(p.orders)?p.orders:[]).map(o=>{const c=clone(o);ensureUid(c);return c}),
       deleted:Array.isArray(p.deleted)?p.deleted.map(String):[],
       seq:Number.isFinite(+p.seq)?+p.seq:1,
@@ -728,7 +722,7 @@
     $('confirmBtn').disabled=cart.length===0;
     $('orderLabel').textContent='Order #'+String(state.seq).padStart(3,'0');
     $('receiptTotal').textContent=money(total);
-    $('receiptProfit').textContent='Est. profit @ '+state.margin+'%: '+money(total*state.margin/100);
+    $('receiptProfit').textContent='Profit: '+money(total);
     const box=$('receiptBody');
     if(!cart.length){box.innerHTML='<p class="empty">No items yet. Pick from the menu.</p>';return}
     box.innerHTML=cart.map((it,i)=>`
@@ -782,7 +776,7 @@
       uid:newUid(),
       items:cart.map(it=>({name:it.name,cat:it.cat,price:it.price,unit:num(lineTotal(it)/it.qty),size:it.size,qty:it.qty})),
       total:num(total),
-      profit:num(total*state.margin/100),
+      profit:num(total),
       ts:new Date().toISOString()
     };
     state.orders.unshift(order);
@@ -792,7 +786,7 @@
     $('doneItems').textContent=qty+' pcs · '+order.items.map(i=>i.name).join(', ');
     $('doneDate').textContent=new Date(order.ts).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
     $('doneTotal').textContent=money(order.total);
-    $('doneProfit').textContent='Est. profit: '+money(order.profit);
+    $('doneProfit').textContent='Profit: '+money(order.profit);
     cart=[];renderCart();renderMenu();
     hide('cartOverlay');show('doneOverlay');
   }
@@ -853,7 +847,7 @@
     const profitIn=(start)=>{
       const list=all.filter(o=>new Date(o.ts)>=start);
       return {
-        profit:list.reduce((s,o)=>s+(o.profit!=null?o.profit:(o.total||0)*state.margin/100),0),
+        profit:list.reduce((s,o)=>s+(o.total||0),0),
         orders:list.length
       };
     };
@@ -932,7 +926,7 @@
         return Object.assign({},o,{
           items:items,
           total:items.reduce((s,i)=>s+soldTotal(i),0),
-          profit:num(items.reduce((s,i)=>s+soldTotal(i),0)*state.margin/100)
+          profit:items.reduce((s,i)=>s+soldTotal(i),0)
         });
       });
     }
@@ -943,7 +937,7 @@
       const when=new Date(o.ts).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
       return `<div class="tx-item">
         <div class="tx-head"><b>#${String(o.id).padStart(3,'0')}</b><strong>${money(o.total||0)}</strong></div>
-        <div class="tx-meta">${esc(when)} · ${pieces} pcs · profit ${money(o.profit||0)}</div>
+        <div class="tx-meta">${esc(when)} · ${pieces} pcs · profit ${money(o.total||0)}</div>
         <div class="tx-body">${esc(names)}</div>
       </div>`;
     }).join('');
@@ -961,7 +955,6 @@
       </div>`).join('');
   }
   function renderSettings(){
-    $('marginInput').value=state.margin;
     $('coffeeList').innerHTML=productRows('coffee');
     $('cookieList').innerHTML=productRows('cookie');
     $('syncRepo').value=syncRepo;
@@ -1127,11 +1120,6 @@
     reader.readAsText(file);
   });
   $('closeSettings').addEventListener('click',()=>hide('settingsOverlay'));
-  $('marginInput').addEventListener('change',e=>{
-    let v=parseFloat(e.target.value);
-    if(!Number.isFinite(v)||v<0||v>100){v=state.margin;toast('Margin: 0 to 100')}
-    state.margin=num(v);e.target.value=state.margin;save();renderCart();
-  });
   $('productList').addEventListener('change',e=>{
     if(e.target.dataset.field!=='price')return;
     const id=e.target.closest('.p-row').dataset.id;
