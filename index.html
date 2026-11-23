@@ -48,6 +48,7 @@
   .edge-hint.right{right:0}
   .edge-hint.right::after{right:0}
   .edge-hint:active::after{background:var(--accent);opacity:1}
+  .app[hidden],.cartbar[hidden],.edge-hint[hidden]{display:none!important}
   .tabs{display:flex;gap:8px;margin:16px 0 12px}
   .tab{
     flex:1;min-height:46px;background:transparent;border:1px solid var(--line);
@@ -221,10 +222,10 @@
 </head>
 <body>
 
-<button class="edge-hint left" id="edgeHistory" type="button" aria-label="Transactions"></button>
-<button class="edge-hint right" id="edgeSettings" type="button" aria-label="Settings"></button>
+<button class="edge-hint left" id="edgeHistory" type="button" aria-label="Transactions" hidden></button>
+<button class="edge-hint right" id="edgeSettings" type="button" aria-label="Settings" hidden></button>
 
-<div class="app">
+<div class="app" id="appShell" hidden>
   <header class="topbar">
     <h1>The Qookie Project</h1>
     <p class="tagline">cookies &amp; coffee</p>
@@ -244,7 +245,7 @@
   </main>
 </div>
 
-<div class="cartbar">
+<div class="cartbar" id="cartBar" hidden>
   <button class="cart-summary" id="openCart" type="button" aria-label="View order">
     <span class="cart-count" id="cartCount">0 items</span>
     <span class="cart-total" id="cartTotal">₱0</span>
@@ -482,6 +483,8 @@
   }
   function show(id){$(id).hidden=false}
   function hide(id){$(id).hidden=true}
+  function showApp(){['appShell','cartBar','edgeHistory','edgeSettings'].forEach(show)}
+  function hideApp(){['appShell','cartBar','edgeHistory','edgeSettings'].forEach(hide)}
   function anyOverlayOpen(){
     return ['loginOverlay','addOverlay','cartOverlay','doneOverlay','historyOverlay','settingsOverlay'].some(id=>!$(id).hidden);
   }
@@ -744,6 +747,7 @@
       $('loginError').hidden=true;
       $('loginPassword').value='';
       hide('loginOverlay');
+      showApp();
       if(syncToken)pullSync(false);
     }else{
       $('loginError').hidden=false;
@@ -754,6 +758,7 @@
     authed=false;
     try{localStorage.removeItem(AUTH_KEY)}catch(err){}
     hide('settingsOverlay');
+    hideApp();
     show('loginOverlay');
     $('loginEmail').value='';
     $('loginPassword').value='';
@@ -907,8 +912,10 @@
   renderSettings();
   if(authed){
     hide('loginOverlay');
+    showApp();
     if(syncToken)pullSync(false);
   }else{
+    hideApp();
     show('loginOverlay');
     setSyncStatus('Sign in to sync');
   }
