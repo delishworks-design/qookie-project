@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#F7F1E4">
 <meta name="color-scheme" content="light">
-<title>Qookie Project — Counter</title>
+<title>The Qookie Project — Counter</title>
 <style>
   :root{
     --bg:#F7F1E4;
@@ -140,13 +140,6 @@
   .stepper.big button{width:58px;height:58px;border:0;background:transparent;font-size:25px;line-height:1}
   .stepper.big button:last-child{border-left:1px solid var(--line)}
   .stepper.big span{flex:1;text-align:center;font-family:Georgia,serif;font-size:29px;font-variant-numeric:tabular-nums}
-  .opt-toggle{
-    width:100%;min-height:54px;background:transparent;border:1px dashed var(--line);
-    text-align:left;padding:10px 14px;font-size:15px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px
-  }
-  .opt-toggle[hidden]{display:none}
-  .opt-toggle.on{border-style:solid;border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,transparent)}
-  .opt-toggle b{color:var(--accent);font-size:14px}
   .size-row{display:flex;gap:8px;margin-bottom:14px}
   .size-row[hidden]{display:none}
   .size-btn{
@@ -200,6 +193,13 @@
   .group-title{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:14px 0 4px}
   .sync-status{font-size:12px;color:var(--muted);margin:10px 0 0;line-height:1.4}
   .sync-status.error{color:#9B2C2C}
+  .login-overlay{align-items:center}
+  .login-sheet{
+    width:min(380px,92vw);max-width:380px;max-height:90dvh;overflow:auto;
+    border:2px solid var(--ink);padding:24px;box-shadow:10px 10px 0 color-mix(in srgb,var(--accent) 18%,transparent)
+  }
+  .login-error{font-size:13px;color:#9B2C2C;margin:0 0 10px}
+  .login-error[hidden]{display:none}
   @media (min-width:700px){
     .app{max-width:900px;padding-left:32px;padding-right:32px}
     .cartbar{max-width:900px;padding-left:32px;padding-right:32px}
@@ -226,7 +226,7 @@
 
 <div class="app">
   <header class="topbar">
-    <h1>Qookie Project</h1>
+    <h1>The Qookie Project</h1>
     <p class="tagline">cookies &amp; coffee</p>
   </header>
 
@@ -252,6 +252,26 @@
   <button class="charge" id="chargeBtn" type="button" disabled>Charge</button>
 </div>
 
+<div class="overlay login-overlay" id="loginOverlay">
+  <div class="sheet login-sheet" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+    <div class="stamp">Members</div>
+    <h2 id="loginTitle">The Qookie Project</h2>
+    <p class="lede">Sign in to open the counter.</p>
+    <form id="loginForm">
+      <div class="field">
+        <label for="loginEmail">Email</label>
+        <input id="loginEmail" type="text" autocomplete="username" placeholder="Qookie" spellcheck="false">
+      </div>
+      <div class="field">
+        <label for="loginPassword">Password</label>
+        <input id="loginPassword" type="password" autocomplete="current-password">
+      </div>
+      <p class="login-error" id="loginError" hidden>Email or password is incorrect.</p>
+      <button class="wide" type="submit">Log in</button>
+    </form>
+  </div>
+</div>
+
 <div class="overlay" id="addOverlay" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="addName">
     <div class="sheet-handle"></div>
@@ -266,9 +286,6 @@
       <button class="size-btn on" type="button" data-oz="12" aria-pressed="true">12 oz<b>base</b></button>
       <button class="size-btn" type="button" data-oz="16" aria-pressed="false">16 oz<b id="addSizeExtra">+₱10</b></button>
     </div>
-    <button class="opt-toggle" id="addCream" type="button" aria-pressed="false" hidden>
-      <span id="addCreamLabel">+ Seasalt cream</span><b id="addCreamPrice">+₱5</b>
-    </button>
     <button class="wide" id="addConfirm" type="button">Add to order</button>
     <button class="ghost" id="addCancel" type="button">Cancel</button>
   </div>
@@ -330,16 +347,11 @@
     <h2 id="setTitle">Settings</h2>
 
     <p class="group-title">General</p>
-    <div class="two">
-      <div class="field">
-        <label for="marginInput">Sales margin (%)</label>
-        <input id="marginInput" type="number" inputmode="decimal" min="0" max="100" step="1">
-      </div>
-      <div class="field">
-        <label for="addonInput">Seasalt cream (₱)</label>
-        <input id="addonInput" type="number" inputmode="decimal" min="0" step="1">
-      </div>
+    <div class="field">
+      <label for="marginInput">Sales margin (%)</label>
+      <input id="marginInput" type="number" inputmode="decimal" min="0" max="100" step="1">
     </div>
+    <button class="ghost" id="logoutBtn" type="button">Log out</button>
 
     <div class="divider"></div>
     <p class="group-title">Products — tap a price to edit</p>
@@ -411,11 +423,13 @@
       {id:'k-dc',name:'Double Chocolate',cat:'cookie',price:25}
     ],
     margin:60,
-    addonPrice:5,
     orders:[],
     seq:1,
     updatedAt:0
   };
+  const AUTH_KEY='qookie.auth.v1';
+  const LOGIN_EMAIL='Qookie';
+  const LOGIN_PASS='Qokiee123';
   const REPO_DEFAULT='delishworks-design/qookie-project-data';
   const SYNC_TOKEN_KEY='qookie.sync.token';
   const SYNC_REPO_KEY='qookie.sync.repo';
@@ -443,7 +457,6 @@
     return {
       products:products,
       margin:Number.isFinite(+p.margin)?Math.max(0,Math.min(100,+p.margin)):DEFAULTS.margin,
-      addonPrice:Number.isFinite(+p.addonPrice)?Math.max(0,+p.addonPrice):DEFAULTS.addonPrice,
       orders:Array.isArray(p.orders)?p.orders:[],
       seq:Number.isFinite(+p.seq)?+p.seq:1,
       updatedAt:Number.isFinite(+p.updatedAt)?+p.updatedAt:0
@@ -470,13 +483,15 @@
   function show(id){$(id).hidden=false}
   function hide(id){$(id).hidden=true}
   function anyOverlayOpen(){
-    return ['addOverlay','cartOverlay','doneOverlay','historyOverlay','settingsOverlay'].some(id=>!$(id).hidden);
+    return ['loginOverlay','addOverlay','cartOverlay','doneOverlay','historyOverlay','settingsOverlay'].some(id=>!$(id).hidden);
   }
 
   let state=load();
   let cart=[];
   let activeCat='coffee';
-  let addTarget=null, addQty=1, addCream=false, addSize=12;
+  let addTarget=null, addQty=1, addSize=12;
+  let authed=false;
+  try{authed=localStorage.getItem(AUTH_KEY)==='1'}catch(e){}
   let syncToken='', syncRepo=REPO_DEFAULT, syncSha=null, syncBusy=false, syncTimer=null, historyFilter='all';
   try{syncToken=localStorage.getItem(SYNC_TOKEN_KEY)||''}catch(e){}
   try{syncRepo=localStorage.getItem(SYNC_REPO_KEY)||REPO_DEFAULT}catch(e){}
@@ -572,12 +587,12 @@
       <button class="tile ${p.cat==='coffee'?'coffee':''}" type="button" data-id="${esc(p.id)}">
         <span class="name">${esc(p.name)}</span>
         <span class="price">${money(p.price)}</span>
-        <span class="hint">${p.cat==='coffee'?'12 / 16 oz · cream optional':'1 pc'}</span>
+        <span class="hint">${p.cat==='coffee'?'12 / 16 oz':'1 pc'}</span>
         <span class="plus" aria-hidden="true">+</span>
       </button>`).join('');
   }
 
-  const lineTotal=(it)=>(it.price+(it.size===16?SIZE_EXTRA:0)+(it.addon?state.addonPrice:0))*it.qty;
+  const lineTotal=(it)=>(it.price+(it.size===16?SIZE_EXTRA:0))*it.qty;
   const cartTotal=()=>cart.reduce((s,it)=>s+lineTotal(it),0);
   const cartQty=()=>cart.reduce((s,it)=>s+it.qty,0);
 
@@ -596,7 +611,7 @@
       <div class="r-row">
         <div class="r-info">
           <strong>${esc(it.name)}</strong>
-          <small>${money(it.price)}${it.size?' · '+it.size+' oz'+(it.size===16?' +'+money(SIZE_EXTRA):''):''}${it.addon?' + seasalt cream '+money(state.addonPrice):''}</small>
+          <small>${money(it.price)}${it.size?' · '+it.size+' oz'+(it.size===16?' +'+money(SIZE_EXTRA):''):''}</small>
         </div>
         <div class="stepper">
           <button type="button" data-act="dec" data-i="${i}" aria-label="Decrease ${esc(it.name)}">−</button>
@@ -608,36 +623,30 @@
   }
 
   function openAdd(p){
-    addTarget=p; addQty=1; addCream=false; addSize=12;
+    addTarget=p; addQty=1; addSize=12;
     $('addName').textContent=p.name;
-    $('addCream').hidden=p.cat!=='coffee';
     $('addSize').hidden=p.cat!=='coffee';
     $('addSizeExtra').textContent='+'+money(SIZE_EXTRA);
-    $('addCreamPrice').textContent='+'+money(state.addonPrice);
     updateAdd();
     show('addOverlay');
   }
   function updateAdd(){
-    const unit=addTarget.price+(addSize===16?SIZE_EXTRA:0)+(addCream?state.addonPrice:0);
+    const unit=addTarget.price+(addSize===16?SIZE_EXTRA:0);
     $('addPrice').firstChild.nodeValue=money(unit*addQty);
-    $('addUnit').textContent=money(addTarget.price)+' each'+(addTarget.cat==='coffee'?' · '+addSize+' oz'+(addSize===16?' +'+money(SIZE_EXTRA):''):'')+(addCream?' + seasalt '+money(state.addonPrice):'')+' · '+addQty+' '+(addQty===1?'pc':'pcs');
+    $('addUnit').textContent=money(addTarget.price)+' each'+(addTarget.cat==='coffee'?' · '+addSize+' oz'+(addSize===16?' +'+money(SIZE_EXTRA):''):'')+' · '+addQty+' '+(addQty===1?'pc':'pcs');
     $('addQty').textContent=addQty;
     document.querySelectorAll('.size-btn').forEach(b=>{
       const on=Number(b.dataset.oz)===addSize;
       b.classList.toggle('on',on);
       b.setAttribute('aria-pressed',String(on));
     });
-    const btn=$('addCream');
-    btn.classList.toggle('on',addCream);
-    btn.setAttribute('aria-pressed',String(addCream));
-    $('addCreamLabel').textContent=addCream?'✓ Seasalt cream':'+ Seasalt cream';
   }
   function confirmAdd(){
     if(!addTarget)return;
     const size=addTarget.cat==='coffee'?addSize:null;
-    const found=cart.find(it=>it.id===addTarget.id&&it.addon===addCream&&it.size===size);
+    const found=cart.find(it=>it.id===addTarget.id&&it.size===size);
     if(found)found.qty+=addQty;
-    else cart.push({id:addTarget.id,name:addTarget.name,price:addTarget.price,cat:addTarget.cat,addon:addCream,size:size,qty:addQty});
+    else cart.push({id:addTarget.id,name:addTarget.name,price:addTarget.price,cat:addTarget.cat,size:size,qty:addQty});
     renderCart();hide('addOverlay');toast(addTarget.name+' · '+(size?size+' oz':'1 pc')+' +'+addQty);
   }
 
@@ -646,7 +655,7 @@
     const total=cartTotal(),qty=cartQty();
     const order={
       id:state.seq,
-      items:cart.map(it=>({name:it.name,cat:it.cat,price:it.price,unit:num(lineTotal(it)/it.qty),addon:it.addon,size:it.size,qty:it.qty})),
+      items:cart.map(it=>({name:it.name,cat:it.cat,price:it.price,unit:num(lineTotal(it)/it.qty),size:it.size,qty:it.qty})),
       total:num(total),
       profit:num(total*state.margin/100),
       ts:new Date().toISOString()
@@ -668,7 +677,7 @@
     const p=state.products.find(x=>x.name===i.name);
     return p?p.cat:(i.size?'coffee':'cookie');
   };
-  const soldTotal=(i)=>(i.unit!=null?i.unit:(i.price+(i.size===16?SIZE_EXTRA:0)+(i.addon?state.addonPrice:0)))*i.qty;
+  const soldTotal=(i)=>(i.unit!=null?i.unit:(i.price+(i.size===16?SIZE_EXTRA:0)))*i.qty;
 
   function renderHistory(){
     const all=state.orders;
@@ -696,7 +705,7 @@
     if(!shown.length){box.innerHTML='<p class="empty">No transactions here yet.</p>';return}
     box.innerHTML=shown.map(o=>{
       const pieces=(o.items||[]).reduce((s,i)=>s+i.qty,0);
-      const names=(o.items||[]).map(i=>(itemCat(i)==='coffee'?'Coffee':'Cookies')+' · '+i.qty+'× '+i.name+(i.size?' '+i.size+' oz':'')+(i.addon?' (+cream)':'')).join(' · ');
+      const names=(o.items||[]).map(i=>(itemCat(i)==='coffee'?'Coffee':'Cookies')+' · '+i.qty+'× '+i.name+(i.size?' '+i.size+' oz':'')).join(' · ');
       const when=new Date(o.ts).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
       return `<div class="tx-item">
         <div class="tx-head"><b>#${String(o.id).padStart(3,'0')}</b><strong>${money(o.total||0)}</strong></div>
@@ -719,12 +728,37 @@
   }
   function renderSettings(){
     $('marginInput').value=state.margin;
-    $('addonInput').value=state.addonPrice;
     $('coffeeList').innerHTML=productRows('coffee');
     $('cookieList').innerHTML=productRows('cookie');
     $('syncRepo').value=syncRepo;
     $('syncToken').value=syncToken;
   }
+
+  $('loginForm').addEventListener('submit',e=>{
+    e.preventDefault();
+    const email=$('loginEmail').value.trim();
+    const pass=$('loginPassword').value;
+    if(email===LOGIN_EMAIL&&pass===LOGIN_PASS){
+      authed=true;
+      try{localStorage.setItem(AUTH_KEY,'1')}catch(err){}
+      $('loginError').hidden=true;
+      $('loginPassword').value='';
+      hide('loginOverlay');
+      if(syncToken)pullSync(false);
+    }else{
+      $('loginError').hidden=false;
+    }
+  });
+  $('logoutBtn').addEventListener('click',()=>{
+    if(!confirm('Log out?'))return;
+    authed=false;
+    try{localStorage.removeItem(AUTH_KEY)}catch(err){}
+    hide('settingsOverlay');
+    show('loginOverlay');
+    $('loginEmail').value='';
+    $('loginPassword').value='';
+    $('loginError').hidden=true;
+  });
 
   $('menu').addEventListener('click',e=>{
     const tile=e.target.closest('.tile');
@@ -735,7 +769,6 @@
 
   $('addDec').addEventListener('click',()=>{if(addQty>1){addQty--;updateAdd()}});
   $('addInc').addEventListener('click',()=>{addQty++;updateAdd()});
-  $('addCream').addEventListener('click',()=>{addCream=!addCream;updateAdd()});
   document.querySelectorAll('.size-btn').forEach(b=>b.addEventListener('click',()=>{addSize=Number(b.dataset.oz);updateAdd()}));
   $('addConfirm').addEventListener('click',confirmAdd);
   $('addCancel').addEventListener('click',()=>hide('addOverlay'));
@@ -801,11 +834,6 @@
     if(!Number.isFinite(v)||v<0||v>100){v=state.margin;toast('Margin: 0 to 100')}
     state.margin=num(v);e.target.value=state.margin;save();renderCart();
   });
-  $('addonInput').addEventListener('change',e=>{
-    let v=parseFloat(e.target.value);
-    if(!Number.isFinite(v)||v<0){v=state.addonPrice;toast('Invalid amount')}
-    state.addonPrice=num(v);e.target.value=state.addonPrice;save();renderMenu();renderCart();
-  });
   $('productList').addEventListener('change',e=>{
     if(e.target.dataset.field!=='price')return;
     const id=e.target.closest('.p-row').dataset.id;
@@ -864,17 +892,26 @@
   document.addEventListener('touchend',e=>{const t=e.changedTouches&&e.changedTouches[0];if(t)finishSwipe(t.clientX,t.clientY)},{passive:true});
   document.addEventListener('touchcancel',()=>{swipeStart=null},{passive:true});
 
-  document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.hidden=true}));
+  document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{
+    if(e.target===o&&(o.id!=='loginOverlay'||authed))o.hidden=true;
+  }));
   document.addEventListener('keydown',e=>{
     if(e.key!=='Escape')return;
-    document.querySelectorAll('.overlay').forEach(o=>o.hidden=true);
+    document.querySelectorAll('.overlay').forEach(o=>{
+      if(o.id!=='loginOverlay'||authed)o.hidden=true;
+    });
   });
 
   renderMenu();
   renderCart();
   renderSettings();
-  if(syncToken)pullSync(false);
-  else setSyncStatus('Not connected');
+  if(authed){
+    hide('loginOverlay');
+    if(syncToken)pullSync(false);
+  }else{
+    show('loginOverlay');
+    setSyncStatus('Sign in to sync');
+  }
 })();
 </script>
 </body>
