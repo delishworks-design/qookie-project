@@ -197,6 +197,11 @@
     font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)
   }
   .view-tab.active{border-bottom-color:var(--accent);color:var(--accent);font-weight:700}
+  .profit-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px;margin-bottom:4px}
+  .profit-card{border:1px solid var(--line);border-top:2px solid var(--accent);background:var(--paper);padding:9px 10px}
+  .profit-card span{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .profit-card strong{display:block;font-family:Georgia,serif;font-size:clamp(17px,4.6vw,22px);letter-spacing:-.04em;margin-top:3px;font-variant-numeric:tabular-nums}
+  .profit-card small{display:block;font-size:11px;color:var(--muted);margin-top:2px}
   .day-list{display:flex;flex-direction:column;gap:8px}
   .day-row{border:1px solid var(--line);border-top:2px solid var(--ink);padding:10px 12px;background:var(--bg)}
   .day-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
@@ -360,6 +365,12 @@
       <div class="sales-grid">
         <div class="sales-card coffee"><span>Coffee · today</span><strong id="coffeeSales">₱0</strong><small id="coffeeCount">0 sold</small></div>
         <div class="sales-card cookie"><span>Cookies · today</span><strong id="cookieSales">₱0</strong><small id="cookieCount">0 sold</small></div>
+      </div>
+      <p class="group-title">Profit</p>
+      <div class="profit-grid">
+        <div class="profit-card"><span>Daily profit</span><strong id="profitDaily">₱0</strong><small id="profitDailyMeta">0 orders</small></div>
+        <div class="profit-card"><span>Weekly profit</span><strong id="profitWeekly">₱0</strong><small id="profitWeeklyMeta">0 orders</small></div>
+        <div class="profit-card"><span>Monthly profit</span><strong id="profitMonthly">₱0</strong><small id="profitMonthlyMeta">0 orders</small></div>
       </div>
       <p class="group-title">Sales by day</p>
       <div class="day-list" id="dayList"></div>
@@ -833,6 +844,24 @@
     const sumToday=today.reduce((s,o)=>s+(o.total||0),0);
     $('historyStat').textContent=today.length+' order'+(today.length===1?'':'s')+' · '+money(sumToday)+' today';
     $('clearHistoryBtn').disabled=all.length===0;
+
+    const now=new Date();
+    const dayStart=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+    const weekday=(now.getDay()+6)%7;
+    const weekStart=new Date(now.getFullYear(),now.getMonth(),now.getDate()-weekday);
+    const monthStart=new Date(now.getFullYear(),now.getMonth(),1);
+    const profitIn=(start)=>{
+      const list=all.filter(o=>new Date(o.ts)>=start);
+      return {
+        profit:list.reduce((s,o)=>s+(o.profit!=null?o.profit:(o.total||0)*state.margin/100),0),
+        orders:list.length
+      };
+    };
+    [['profitDaily','profitDailyMeta',dayStart],['profitWeekly','profitWeeklyMeta',weekStart],['profitMonthly','profitMonthlyMeta',monthStart]].forEach(row=>{
+      const p=profitIn(row[2]);
+      $(row[0]).textContent=money(p.profit);
+      $(row[1]).textContent=p.orders+' order'+(p.orders===1?'':'s');
+    });
 
     const setStats=(orders,coffeeIds,cookieIds)=>{
       const coffee=categoryTotals(orders,'coffee');
