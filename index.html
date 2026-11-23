@@ -203,6 +203,18 @@
   .day-head b{font-family:Georgia,serif;font-size:15px}
   .day-head strong{font-family:Georgia,serif;font-size:17px;font-variant-numeric:tabular-nums}
   .day-stats{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:6px}
+  .chart-toggle{display:flex;gap:8px;margin-bottom:10px}
+  .chart-toggle .view-tab{border:1px solid var(--line);min-height:38px}
+  .chart-toggle .view-tab.active{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,transparent)}
+  .chart{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+  .bar-row{display:grid;gap:3px}
+  .bar-label{display:flex;justify-content:space-between;gap:10px;font-size:13px}
+  .bar-label b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .bar-label span{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .bar-track{height:9px;background:var(--bg);border:1px solid var(--line)}
+  .bar-fill{height:100%;background:var(--ink);min-width:3px}
+  .bar-row.coffee .bar-fill{background:var(--accent)}
+  .bar-row.top .bar-label b::after{content:" · best";color:var(--accent);font-size:11px;letter-spacing:.06em}
   .group-title{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:14px 0 4px}
   .sync-status{font-size:12px;color:var(--muted);margin:10px 0 0;line-height:1.4}
   .sync-status.error{color:#9B2C2C}
@@ -356,6 +368,15 @@
         <div class="sales-card coffee"><span>Coffee · all time</span><strong id="coffeeAll">₱0</strong><small id="coffeeAllCount">0 sold</small></div>
         <div class="sales-card cookie"><span>Cookies · all time</span><strong id="cookieAll">₱0</strong><small id="cookieAllCount">0 sold</small></div>
       </div>
+      <p class="group-title">Best sellers</p>
+      <div class="chart-toggle" id="salesRange">
+        <button class="view-tab" type="button" data-range="today" aria-pressed="false">Today</button>
+        <button class="view-tab active" type="button" data-range="all" aria-pressed="true">All time</button>
+      </div>
+      <p class="lede">Coffee</p>
+      <div class="chart" id="coffeeChart"></div>
+      <p class="lede">Cookies</p>
+      <div class="chart" id="cookieChart"></div>
     </section>
 
     <section id="txPanel" hidden>
@@ -538,7 +559,7 @@
   let addTarget=null, addQty=1, addSize=12;
   let authed=false;
   try{authed=localStorage.getItem(AUTH_KEY)==='1'}catch(e){}
-  let syncToken='', syncRepo=REPO_DEFAULT, syncSha=null, syncBusy=false, syncTimer=null, historyFilter='all', historyTab='sales';
+  let syncToken='', syncRepo=REPO_DEFAULT, syncSha=null, syncBusy=false, syncTimer=null, historyFilter='all', historyTab='sales', salesRange='all';
   try{syncToken=localStorage.getItem(SYNC_TOKEN_KEY)||''}catch(e){}
   try{syncRepo=localStorage.getItem(SYNC_REPO_KEY)||REPO_DEFAULT}catch(e){}
 
@@ -779,6 +800,28 @@
       total:items.reduce((s,i)=>s+soldTotal(i),0)
     };
   };
+  function renderCharts(orders){
+    const ranked=(cat)=>{
+      const map=new Map();
+      orders.forEach(o=>(o.items||[]).forEach(i=>{
+        if(itemCat(i)!==cat)return;
+        if(!map.has(i.name))map.set(i.name,{name:i.name,qty:0,total:0});
+        const row=map.get(i.name);
+        row.qty+=i.qty;
+        row.total+=soldTotal(i);
+      }));
+      return [...map.values()].sort((a,b)=>b.qty-a.qty||b.total-a.total);
+    };
+    [['coffee','coffeeChart'],['cookie','cookieChart']].forEach(pair=>{
+      const list=ranked(pair[0]);
+      const max=list.length?list[0].qty:0;
+      $(pair[1]).innerHTML=list.length?list.map((r,idx)=>`
+        <div class="bar-row ${pair[0]}${idx===0?' top':''}">
+          <div class="bar-label"><b>${esc(r.name)}</b><span>${r.qty} sold · ${money(r.total)}</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.max(4,Math.round(r.qty/max*100))}%"></div></div>
+        </div>`).join(''):'<p class="empty">No sales yet.</p>';
+    });
+  }
   function renderHistory(){
     const all=state.orders.filter(o=>!state.deleted.includes(o.uid));
     const dateKey=(ts)=>{
@@ -829,6 +872,12 @@
       </div>`;
     }).join(''):'<p class="empty">No sales yet.</p>';
 
+    document.querySelectorAll('#salesRange .view-tab').forEach(b=>{
+      const on=b.dataset.range===salesRange;
+      b.classList.toggle('active',on);
+      b.setAttribute('aria-pressed',String(on));
+    });
+    renderCharts(salesRange==='today'?today:all);
     document.querySelectorAll('#historyTabs .view-tab').forEach(b=>{
       const on=b.dataset.tab===historyTab;
       b.classList.toggle('active',on);
@@ -961,6 +1010,12 @@
   $('edgeHistory').addEventListener('click',openHistory);
   $('edgeSettings').addEventListener('click',openSettings);
   $('closeHistory').addEventListener('click',()=>hide('historyOverlay'));
+  $('salesRange').addEventListener('click',e=>{
+    const b=e.target.closest('[data-range]');
+    if(!b)return;
+    salesRange=b.dataset.range;
+    renderHistory();
+  });
   $('historyTabs').addEventListener('click',e=>{
     const tab=e.target.closest('.view-tab');
     if(!tab)return;
