@@ -427,6 +427,11 @@
       <button class="wide" id="syncConnect" type="button">Connect</button>
       <button class="ghost" id="syncNow" type="button">Sync now</button>
     </div>
+    <div class="two">
+      <button class="ghost" id="backupBtn" type="button">Download backup</button>
+      <button class="ghost" id="restoreBtn" type="button">Restore backup</button>
+    </div>
+    <input type="file" id="restoreFile" accept="application/json,.json" hidden>
     <p class="sync-status" id="syncStatus">Not connected</p>
 
     <div class="divider"></div>
@@ -455,6 +460,7 @@
     ],
     margin:60,
     orders:[],
+    deleted:[],
     seq:1,
     updatedAt:0
   };
@@ -474,6 +480,12 @@
   const num=(v)=>Math.round(Number(v)*100)/100;
   const SIZE_EXTRA=10;
 
+  const newUid=()=>Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10);
+  function ensureUid(o){
+    if(!o)return null;
+    if(!o.uid)o.uid='legacy-'+o.id+'-'+o.ts+'-'+Object.keys(o).length;
+    return o.uid;
+  }
   function normalize(p){
     if(!p||!Array.isArray(p.products)) return clone(DEFAULTS);
     const products=p.products.filter(x=>x&&x.id&&x.name).map(x=>({
@@ -488,7 +500,8 @@
     return {
       products:products,
       margin:Number.isFinite(+p.margin)?Math.max(0,Math.min(100,+p.margin)):DEFAULTS.margin,
-      orders:Array.isArray(p.orders)?p.orders:[],
+      orders:(Array.isArray(p.orders)?p.orders:[]).map(o=>{const c=clone(o);ensureUid(c);return c}),
+      deleted:Array.isArray(p.deleted)?p.deleted.map(String):[],
       seq:Number.isFinite(+p.seq)?+p.seq:1,
       updatedAt:Number.isFinite(+p.updatedAt)?+p.updatedAt:0
     };
@@ -548,6 +561,50 @@
     const bin=atob(String(str||'').replace(/\s/g,''));
     return new TextDecoder().decode(Uint8Array.from(bin,c=>c.charCodeAt(0)));
   }
+  function mergeOrders(localOrders,remoteOrders,localDeleted,remoteDeleted){
+    const deleted=new Set((localDeleted||[]).concat(remoteDeleted||[]).map(String));
+    const map=new Map();
+    (localOrders||[]).concat(remoteOrders||[]).forEach(o=>{
+      if(!o)return;
+      const uid=ensureUid(o);
+      if(!uid||deleted.has(uid))return;
+      const cur=map.get(uid);
+      if(!cur||new Date(o.ts).getTime()>new Date(cur.ts).getTime())map.set(uid,clone(o));
+    });
+    return {
+      orders:[...map.values()].sort((a,b)=>new Date(b.ts)-new Date(a.ts)),
+      deleted:[...deleted]
+    };
+  }
+  const stateSignature=()=>JSON.stringify({
+    updatedAt:state.updatedAt,
+    orders:state.orders.map(o=>o.uid).sort(),
+    deleted:state.deleted.slice().sort()
+  });
+  let lastSyncedSignature='';
+  function applyRemote(remote,render){
+    if(!remote)return;
+    const remoteOrders=Array.isArray(remote.orders)?remote.orders:((remote.state&&remote.state.orders)||[]);
+    const remoteDeleted=Array.isArray(remote.deleted)?remote.deleted:((remote.state&&remote.state.deleted)||[]);
+    const merged=mergeOrders(state.orders,remoteOrders,state.deleted,remoteDeleted);
+    const remoteState=remote.state||null;
+    const remoteTime=Number(remote.updatedAt)||0;
+    const localSeq=state.seq;
+    if(remoteState&&remoteTime>(state.updatedAt||0)){
+      const next=normalize(Object.assign({},remoteState,{orders:remoteOrders,deleted:remoteDeleted}));
+      next.orders=merged.orders;
+      next.deleted=merged.deleted;
+      next.seq=Math.max(localSeq,next.seq);
+      state=next;
+    }else{
+      state.orders=merged.orders;
+      state.deleted=merged.deleted;
+      state.seq=Math.max(localSeq,(remoteState&&Number(remoteState.seq))||0);
+    }
+    state.seq=Math.max(state.seq,state.orders.reduce((m,o)=>Math.max(m,Number(o.id)||0),0)+1);
+    try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}
+    if(render){renderMenu();renderCart();renderHistory();renderSettings()}
+  }
   function scheduleSync(){
     if(!syncToken)return;
     clearTimeout(syncTimer);
@@ -558,13 +615,22 @@
     if(!syncToken||syncBusy)return;
     syncBusy=true;setSyncStatus('Syncing…');
     try{
-      if(!syncSha){
-        const cur=await fetch(syncUrl(),{headers:syncHeaders()});
-        if(cur.ok)syncSha=(await cur.json()).sha;
+      const cur=await fetch(syncUrl(),{headers:syncHeaders()});
+      if(cur.status===404){syncSha=null}
+      else if(cur.ok){
+        const j=await cur.json();
+        syncSha=j.sha;
+        applyRemote(JSON.parse(decodeB64(j.content)),false);
       }
       const body={
         message:'Sync Qookie Project state',
-        content:encodeB64(JSON.stringify({version:1,updatedAt:state.updatedAt||Date.now(),state:state})),
+        content:encodeB64(JSON.stringify({
+          version:2,
+          updatedAt:state.updatedAt||Date.now(),
+          state:state,
+          orders:state.orders,
+          deleted:state.deleted
+        })),
         branch:'main'
       };
       if(syncSha)body.sha=syncSha;
@@ -576,6 +642,7 @@
       if(res.status===409){syncSha=null;syncBusy=false;return doSync()}
       if(!res.ok)throw new Error('GitHub HTTP '+res.status);
       syncSha=(await res.json()).content.sha;
+      lastSyncedSignature=stateSignature();
       setSyncStatus('Live · '+new Date().toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'}));
     }catch(e){setSyncStatus('Sync failed: '+e.message,true)}
     finally{syncBusy=false}
@@ -592,19 +659,12 @@
       if(!res.ok)throw new Error('GitHub HTTP '+res.status);
       const j=await res.json();
       syncSha=j.sha;
-      const remote=JSON.parse(decodeB64(j.content));
-      const remoteTime=remote&&remote.updatedAt?remote.updatedAt:0;
-      if(remote&&remote.state&&remoteTime>(state.updatedAt||0)){
-        state=normalize(remote.state);
-        state.updatedAt=remoteTime;
-        try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}
-        renderMenu();renderCart();renderHistory();renderSettings();
-        setSyncStatus('Live · '+new Date().toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'}));
-        if(announce)toast('Loaded cloud data');
-      }else{
-        setSyncStatus('Live · '+new Date().toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'}));
-        if(!remote||!remote.state||remoteTime<(state.updatedAt||0))scheduleSync();
-      }
+      const before=stateSignature();
+      applyRemote(JSON.parse(decodeB64(j.content)),true);
+      setSyncStatus('Live · '+new Date().toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'}));
+      if(announce)toast('Merged cloud data');
+      if(stateSignature()!==lastSyncedSignature&&stateSignature()!==before)scheduleSync();
+      else if(before!==lastSyncedSignature)scheduleSync();
     }catch(e){setSyncStatus('Sync failed: '+e.message,true)}
     finally{syncBusy=false}
   }
@@ -687,6 +747,7 @@
     const total=cartTotal(),qty=cartQty();
     const order={
       id:state.seq,
+      uid:newUid(),
       items:cart.map(it=>({name:it.name,cat:it.cat,price:it.price,unit:num(lineTotal(it)/it.qty),size:it.size,qty:it.qty})),
       total:num(total),
       profit:num(total*state.margin/100),
@@ -719,7 +780,7 @@
     };
   };
   function renderHistory(){
-    const all=state.orders;
+    const all=state.orders.filter(o=>!state.deleted.includes(o.uid));
     const dateKey=(ts)=>{
       const dt=new Date(ts);
       return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
@@ -914,7 +975,8 @@
   });
   $('clearHistoryBtn').addEventListener('click',()=>{
     if(!confirm('Clear all transactions?'))return;
-    state.orders=[];save();renderHistory();toast('History cleared');
+    state.orders.forEach(o=>{const u=ensureUid(o);if(u&&!state.deleted.includes(u))state.deleted.push(u)});
+    save();renderHistory();toast('History cleared');
   });
 
   function connectSync(announce){
@@ -931,6 +993,55 @@
   }
   $('syncConnect').addEventListener('click',()=>connectSync(true));
   $('syncNow').addEventListener('click',()=>connectSync(true));
+  $('backupBtn').addEventListener('click',()=>{
+    const payload={
+      version:2,
+      exportedAt:new Date().toISOString(),
+      updatedAt:state.updatedAt,
+      state:state,
+      orders:state.orders,
+      deleted:state.deleted
+    };
+    const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download='qookie-backup-'+new Date().toISOString().slice(0,10)+'.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+    toast('Backup downloaded');
+  });
+  $('restoreBtn').addEventListener('click',()=>$('restoreFile').click());
+  $('restoreFile').addEventListener('change',e=>{
+    const file=e.target.files&&e.target.files[0];
+    if(!file)return;
+    const reader=new FileReader();
+    reader.onload=()=>{
+      try{
+        const data=JSON.parse(reader.result);
+        const orders=data.orders||(data.state&&data.state.orders)||[];
+        const deleted=data.deleted||(data.state&&data.state.deleted)||[];
+        const merged=mergeOrders(state.orders,orders,state.deleted,deleted);
+        if(data.state&&(Number(data.updatedAt)||0)>(state.updatedAt||0)){
+          const next=normalize(data.state);
+          next.orders=merged.orders;
+          next.deleted=merged.deleted;
+          state=next;
+        }else{
+          state.orders=merged.orders;
+          state.deleted=merged.deleted;
+        }
+        try{localStorage.setItem(KEY,JSON.stringify(state))}catch(err){}
+        renderMenu();renderCart();renderHistory();renderSettings();
+        save();
+        toast('Backup merged · '+state.orders.filter(o=>!state.deleted.includes(o.uid)).length+' orders');
+      }catch(err){toast('Invalid backup file')}
+      e.target.value='';
+    };
+    reader.readAsText(file);
+  });
   $('closeSettings').addEventListener('click',()=>hide('settingsOverlay'));
   $('marginInput').addEventListener('change',e=>{
     let v=parseFloat(e.target.value);
