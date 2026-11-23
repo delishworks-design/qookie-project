@@ -1,0 +1,651 @@
+<!doctype html>
+<!--
+  Aesthetic: a receipt on a cafe counter — thermal paper, ink rules, mono prices, one violet stamp.
+  Memorable move: the ticket stub's oversized order number that flips from IN THE QUEUE to READY.
+-->
+<html lang="fil">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F7F1E4">
+<meta name="description" content="Smart menu ng The Qookie Project. Pumili ng coffee o cookie, i-send ang order, at hintayin ang READY sa counter.">
+<title>Menu ng Qookie — pumili, mag-order, hintayin ang ready</title>
+<style>
+  :root{
+    --cream:#F7F1E4;
+    --paper:#FDFAF2;
+    --ink:#0F4C5A;
+    --muted:#51717A;
+    --hair:#D6CBB6;
+    --violet:#5A34A6;
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--cream);
+    color:var(--ink);
+    font-family:Georgia,"Times New Roman",serif;
+    -webkit-font-smoothing:antialiased;
+    padding:max(16px,env(safe-area-inset-top)) 14px calc(100px + env(safe-area-inset-bottom));
+  }
+  .paper{max-width:760px;margin:0 auto;background:var(--paper);border:2px solid var(--ink);padding:18px 16px}
+  :focus-visible{outline:3px solid var(--violet);outline-offset:2px}
+
+  /* masthead — asymmetric, like the top of a receipt */
+  .masthead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;border-bottom:2px solid var(--ink);padding-bottom:12px;margin-bottom:18px}
+  .brand{font-size:clamp(22px,6vw,30px);font-weight:700;letter-spacing:-.04em;line-height:1}
+  .tagline{font-family:"Courier New",monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);text-align:right;line-height:1.5}
+  .meta{display:flex;justify-content:space-between;gap:12px;font-family:"Courier New",monospace;font-size:10px;letter-spacing:.08em;color:var(--muted);margin-bottom:16px}
+
+  .lede{font-size:clamp(17px,4.6vw,21px);line-height:1.32;letter-spacing:-.015em;margin:0 0 6px}
+  .note{font-family:"Courier New",monospace;font-size:12px;color:var(--muted);line-height:1.55;margin:0 0 16px}
+
+  /* tabs */
+  .tabs{display:flex;gap:8px;border-bottom:2px solid var(--ink);margin-bottom:4px}
+  .tab{flex:1;min-height:46px;background:none;border:0;border-bottom:4px solid transparent;margin-bottom:-2px;font-family:Georgia,serif;font-size:17px;color:var(--muted);cursor:pointer}
+  .tab.active{color:var(--ink);font-weight:700;border-bottom-color:var(--violet)}
+
+  /* menu tiles */
+  .grid{display:grid;grid-template-columns:1fr}
+  .tile{border-bottom:1px solid var(--hair);padding:12px 0}
+  .tile-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+  .tile-name{font-size:18px;letter-spacing:-.01em}
+  .tile-price{font-family:"Courier New",monospace;font-size:18px;font-weight:700;letter-spacing:-.05em;white-space:nowrap}
+  .tile-sub{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;min-height:44px}
+  .tile-hint{font-family:"Courier New",monospace;font-size:11px;letter-spacing:.04em;color:var(--muted)}
+  .tile-actions{display:flex;align-items:center;gap:8px}
+  .sizebar{display:flex;gap:6px}
+  .size-btn{min-height:44px;min-width:58px;background:var(--paper);border:1px solid var(--hair);color:var(--muted);font-family:"Courier New",monospace;font-size:12px;cursor:pointer}
+  .size-btn.on{border:2px solid var(--ink);color:var(--ink);font-weight:700}
+  .add{min-height:44px;min-width:44px;background:var(--ink);border:2px solid var(--ink);color:var(--paper);font-family:"Courier New",monospace;font-size:24px;line-height:1;cursor:pointer}
+  .add:active{background:var(--violet);border-color:var(--violet)}
+  .empty{font-family:"Courier New",monospace;font-size:13px;color:var(--muted);line-height:1.6;padding:18px 0;border-bottom:1px solid var(--hair)}
+
+  /* fixed cart bar */
+  .cartbar{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:760px;background:var(--ink);border-top:2px solid #093b46;color:var(--paper);display:flex;align-items:center;gap:12px;padding:10px 16px calc(10px + env(safe-area-inset-bottom));z-index:30}
+  .c-count{font-family:"Courier New",monospace;font-size:12px;letter-spacing:.06em;opacity:.85}
+  .c-total{font-family:"Courier New",monospace;font-size:clamp(20px,6vw,26px);font-weight:700;letter-spacing:-.05em;margin-left:auto}
+  .review-btn{min-height:44px;padding:0 14px;background:var(--paper);color:var(--ink);border:2px solid var(--paper);font-family:Georgia,serif;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap}
+
+  /* bottom sheet */
+  .overlay{position:fixed;inset:0;background:rgba(15,76,90,.45);z-index:50;display:flex;align-items:flex-end;justify-content:center}
+  .sheet{width:100%;max-width:760px;max-height:88vh;overflow:auto;background:var(--paper);border-top:2px solid var(--ink);padding:16px 16px calc(20px + env(safe-area-inset-bottom));animation:slideUp .18s ease-out}
+  .sheet-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;border-bottom:2px solid var(--ink);padding-bottom:10px;margin-bottom:12px}
+  .sheet-title{font-size:22px;font-weight:700;letter-spacing:-.03em}
+  .sheet-close{min-height:44px;min-width:44px;background:none;border:0;color:var(--muted);font-family:"Courier New",monospace;font-size:14px;cursor:pointer}
+  .c-row{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--hair)}
+  .c-info strong{display:block;font-size:16px;font-weight:700}
+  .c-info small{display:block;font-family:"Courier New",monospace;font-size:11px;color:var(--muted);margin-top:2px}
+  .stepper{display:flex;align-items:center;border:1px solid var(--ink)}
+  .stepper button{min-height:40px;min-width:40px;background:var(--paper);border:0;color:var(--ink);font-family:"Courier New",monospace;font-size:18px;cursor:pointer}
+  .stepper span{min-width:26px;text-align:center;font-family:"Courier New",monospace;font-size:14px;font-weight:700}
+  .c-amt{font-family:"Courier New",monospace;font-size:14px;font-weight:700;letter-spacing:-.04em;white-space:nowrap}
+  .field{margin-top:18px}
+  .field label{display:block;font-family:"Courier New",monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+  .field input{width:100%;min-height:46px;border:2px solid var(--ink);background:var(--paper);padding:0 12px;font-family:"Courier New",monospace;font-size:15px;color:var(--ink)}
+  .sheet-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;border-top:2px solid var(--ink);padding-top:12px}
+  .sheet-foot .sum{font-family:"Courier New",monospace;font-size:12px;color:var(--muted);letter-spacing:.06em}
+  .sheet-foot .sum b{display:block;font-size:clamp(22px,7vw,28px);color:var(--ink);letter-spacing:-.05em;margin-top:2px}
+  .btn{min-height:46px;border:2px solid var(--ink);background:var(--paper);color:var(--ink);font-family:Georgia,serif;font-size:16px;font-weight:700;cursor:pointer;padding:0 16px}
+  .btn.primary{background:var(--ink);color:var(--paper)}
+  .btn.wide{width:100%}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .formerr{font-family:"Courier New",monospace;font-size:12px;color:#9A2A2A;line-height:1.5;margin-top:10px}
+  .sendwrap{margin-top:14px}
+
+  /* ticket stub */
+  .banner{border:2px solid var(--violet);padding:12px 14px;margin-bottom:18px;box-shadow:5px 5px 0 rgba(90,52,166,.18)}
+  .banner b{font-family:Georgia,serif;font-size:20px;color:var(--violet);letter-spacing:-.02em}
+  .banner span{display:block;font-family:"Courier New",monospace;font-size:12px;color:var(--muted);margin-top:4px;line-height:1.5}
+  .stub{border:2px solid var(--ink);background:var(--paper);padding:16px 18px 18px;box-shadow:6px 6px 0 rgba(15,76,90,.18)}
+  .stub-label{font-family:"Courier New",monospace;font-size:11px;letter-spacing:.16em;color:var(--muted)}
+  .stub-num{font-family:Georgia,serif;font-size:clamp(72px,24vw,132px);font-weight:700;letter-spacing:-.07em;line-height:.95;margin:6px 0 4px}
+  .tear{border-top:2px dashed var(--hair);margin:14px 0}
+  .stub-status{font-family:"Courier New",monospace;font-size:clamp(17px,5.4vw,24px);font-weight:700;letter-spacing:.09em;color:var(--muted)}
+  .stub-status.is-ready{color:var(--violet)}
+  .stub-who{font-family:"Courier New",monospace;font-size:12px;color:var(--muted);margin-top:6px}
+  .stamp{display:inline-block;font-family:Georgia,serif;font-size:clamp(26px,9vw,42px);font-weight:700;letter-spacing:.08em;color:var(--violet);border:3px solid var(--violet);padding:4px 16px;margin:12px 0 2px;transform:rotate(-7deg);box-shadow:4px 4px 0 rgba(90,52,166,.28);animation:stampIn .18s ease-out}
+  .receipt{margin-top:18px}
+  .t-line{display:flex;justify-content:space-between;gap:16px;font-family:"Courier New",monospace;font-size:13px;padding:6px 0;border-bottom:1px solid var(--hair)}
+  .t-total{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px;font-weight:700}
+  .t-total .lbl{font-family:"Courier New",monospace;font-size:12px;letter-spacing:.1em;color:var(--muted)}
+  .t-total .amt{font-family:"Courier New",monospace;font-size:clamp(24px,8vw,32px);letter-spacing:-.05em}
+  .t-time{font-family:"Courier New",monospace;font-size:11px;color:var(--muted);margin-top:8px}
+  .actions{display:grid;gap:10px;margin-top:20px}
+
+  /* states */
+  .state-note{font-family:"Courier New",monospace;font-size:13px;line-height:1.6;color:var(--muted)}
+  .state-note b{color:var(--ink)}
+  .state-actions{margin-top:16px;display:flex;flex-wrap:wrap;gap:10px}
+  .linkbtn{background:none;border:0;border-bottom:1px solid var(--muted);color:var(--muted);font-family:"Courier New",monospace;font-size:12px;cursor:pointer;padding:4px 0}
+
+  #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(86px + env(safe-area-inset-bottom));z-index:80;background:var(--ink);color:var(--paper);font-family:"Courier New",monospace;font-size:12px;padding:10px 16px;max-width:88vw;text-align:center}
+
+  @keyframes slideUp{from{transform:translateY(16px);opacity:.6}to{transform:translateY(0);opacity:1}}
+  @keyframes stampIn{from{transform:rotate(-7deg) scale(1.3);opacity:0}to{transform:rotate(-7deg) scale(1);opacity:1}}
+  @media (min-width:700px){
+    body{padding-left:24px;padding-right:24px}
+    .paper{padding:28px 32px}
+    .grid{grid-template-columns:1fr 1fr;column-gap:28px}
+    .actions{grid-template-columns:1fr 1fr}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation-duration:.001ms!important;transition-duration:.001ms!important}
+  }
+</style>
+</head>
+<body>
+
+<main class="paper">
+  <div class="masthead">
+    <div class="brand">The Qookie Project</div>
+    <div class="tagline">smart<br>menu</div>
+  </div>
+  <div class="meta"><span>COOKIES &amp; COFFEE</span><span id="metaClock">ORDER HERE</span></div>
+
+  <!-- staff setup: token is kept on this device, shared with index.html -->
+  <section id="setup" aria-labelledby="setupTitle">
+    <h1 id="setupTitle" class="lede">Setup para sa staff.</h1>
+    <p class="note">I-lagay ang sync token para mak-onekta ang menu. Itatago lang ito sa device na 'to — hindi makikita ng ibang tao.</p>
+    <div class="field">
+      <label for="tokenInput">Sync token</label>
+      <input id="tokenInput" type="password" inputmode="text" autocomplete="off" spellcheck="false" placeholder="I-paste ang token">
+    </div>
+    <div class="state-actions"><button id="connectBtn" class="btn primary" type="button">Connect</button></div>
+    <p id="setupErr" class="formerr" hidden></p>
+  </section>
+
+  <section id="loading" hidden>
+    <p class="state-note">Kinukuha ang menu…</p>
+  </section>
+
+  <section id="error" hidden>
+    <h1 class="lede">Hindi ma-load ang menu.</h1>
+    <p id="errMsg" class="state-note"></p>
+    <div class="state-actions">
+      <button id="retryBtn" class="btn primary" type="button">Subukan uli</button>
+      <button id="changeTokenBtn" class="linkbtn" type="button">Palitan ang token</button>
+    </div>
+  </section>
+
+  <section id="menu" hidden>
+    <h1 class="lede">Menu ng Qookie — pumili, mag-order, hintayin ang ready.</h1>
+    <p class="note">Piliin ang gusto mo, tap +, then i-send ang order.</p>
+    <div class="tabs" role="tablist" aria-label="Kategorya">
+      <button class="tab active" type="button" role="tab" data-cat="coffee" aria-selected="true">Coffee</button>
+      <button class="tab" type="button" role="tab" data-cat="cookie" aria-selected="false">Cookies</button>
+    </div>
+    <div id="grid" class="grid"></div>
+  </section>
+
+  <section id="ticket" hidden>
+    <div id="readyBanner" class="banner" hidden>
+      <b>READY NA ANG ORDER MO</b>
+      <span id="readyLine">Order — pwede mo nang kunin sa counter.</span>
+    </div>
+
+    <div class="stub">
+      <div class="stub-label">ANG ORDER MO</div>
+      <div id="tNum" class="stub-num">#000</div>
+      <div class="tear"></div>
+      <div id="tStatus" class="stub-status">IN THE QUEUE</div>
+      <div id="readyStamp" class="stamp" hidden>READY</div>
+      <div id="tWho" class="stub-who">Guest</div>
+    </div>
+
+    <div class="receipt">
+      <div id="tLines"></div>
+      <div class="t-total"><span class="lbl">TOTAL</span><span id="tTotal" class="amt">₱0</span></div>
+      <div id="tTime" class="t-time"></div>
+    </div>
+
+    <div class="actions">
+      <button id="refreshBtn" class="btn primary" type="button">I-refresh ang status</button>
+      <button id="againBtn" class="btn" type="button">Mag-order uli</button>
+    </div>
+  </section>
+</main>
+
+<!-- cart bar -->
+<div id="cartbar" class="cartbar" hidden>
+  <span id="cCount" class="c-count">0 items</span>
+  <span id="cTotal" class="c-total">₱0</span>
+  <button id="reviewBtn" class="review-btn" type="button">I-review ang order</button>
+</div>
+
+<!-- cart sheet -->
+<div id="cartSheet" class="overlay" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="cartTitle">
+    <div class="sheet-head">
+      <h2 id="cartTitle" class="sheet-title">I-review ang order</h2>
+      <button id="closeCart" class="sheet-close" type="button">Isara</button>
+    </div>
+    <div id="cartLines"></div>
+    <div class="field">
+      <label for="custName">Pangalan mo <span style="text-transform:none;letter-spacing:0">(optional)</span></label>
+      <input id="custName" type="text" maxlength="40" autocomplete="off" placeholder="Guest">
+    </div>
+    <div class="sheet-foot">
+      <span class="sum">TOTAL<b id="cartFootTotal">₱0</b></span>
+    </div>
+    <div class="sendwrap"><button id="sendBtn" class="btn primary wide" type="button">I-send ang order</button></div>
+    <p id="sendErr" class="formerr" hidden></p>
+  </div>
+</div>
+
+<div id="toast" role="status" hidden></div>
+
+<script>
+(function(){
+  'use strict';
+
+  var REPO_DEFAULT='delishworks-design/qookie-project-data';
+  var TOKEN_KEY='qookie.sync.token';
+  var REPO_KEY='qookie.sync.repo';
+  var MY_KEY='qookie.menu.orders';
+  var LAST_KEY='qookie.menu.last';
+  var API='https://api.github.com/repos/';
+  var SIZE_EXTRA=10;
+  var POLL_MS=5000;
+
+  // Honest fallback catalog — the live prices always come from data.json.
+  var FALLBACK_PRODUCTS=[
+    {id:'c-americano',name:'Americano',cat:'coffee',price:40},
+    {id:'c-spanish',name:'Spanish Latte',cat:'coffee',price:50},
+    {id:'c-mocha',name:'Mocha',cat:'coffee',price:60},
+    {id:'c-cappuccino',name:'Cappuccino',cat:'coffee',price:50},
+    {id:'c-caramel',name:'Caramel Macchiato',cat:'coffee',price:65},
+    {id:'k-matcha',name:'Matcha',cat:'cookie',price:25},
+    {id:'k-classic',name:'Classic',cat:'cookie',price:25},
+    {id:'k-nc',name:'Cookies and Cream',cat:'cookie',price:25},
+    {id:'k-red',name:'Red Velvet',cat:'cookie',price:25},
+    {id:'k-dc',name:'Double Chocolate',cat:'cookie',price:25}
+  ];
+
+  function $(id){return document.getElementById(id)}
+  function clone(o){return JSON.parse(JSON.stringify(o))}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  function num(v){var n=Number(v);return isFinite(n)?Math.round(n*100)/100:0}
+  function money(n){n=num(n);return '₱'+n.toLocaleString('en-PH',{minimumFractionDigits:Number.isInteger(n)?0:2,maximumFractionDigits:2})}
+  function pad(n){return '#'+String(n).padStart(3,'0')}
+  function b64enc(str){var bytes=new TextEncoder().encode(str),bin='';bytes.forEach(function(b){bin+=String.fromCharCode(b)});return btoa(bin)}
+  function b64dec(str){var bin=atob(String(str||'').replace(/\s/g,''));return new TextDecoder().decode(Uint8Array.from(bin,function(c){return c.charCodeAt(0)}))}
+  function newUid(){return Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10)}
+  function orderTime(o){return new Date((o&&(o.statusAt||o.ts))||0).getTime()||0}
+  function getLs(k){try{return localStorage.getItem(k)}catch(e){return null}}
+  function setLs(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+
+  var token=getLs(TOKEN_KEY)||'';
+  function repoName(){return getLs(REPO_KEY)||REPO_DEFAULT}
+  function syncUrl(){return API+repoName()+'/contents/data.json'}
+  function syncHeaders(){return {Authorization:'Bearer '+token,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'}}
+
+  var products=[],activeCat='coffee',sizeChoice={},cart=[];
+  var myUids=[],knownOrders=[],statusMap={},currentOrder=null;
+  var pollBusy=false,sending=false,pollingStarted=false,toastTimer=null;
+
+  /* ---------- local state ---------- */
+  function loadMy(){
+    try{var a=JSON.parse(getLs(MY_KEY)||'[]');myUids=Array.isArray(a)?a.map(String):[]}catch(e){myUids=[]}
+    try{currentOrder=JSON.parse(getLs(LAST_KEY)||'null')}catch(e){currentOrder=null}
+  }
+  function saveMy(){setLs(MY_KEY,JSON.stringify(myUids));setLs(LAST_KEY,JSON.stringify(currentOrder||null))}
+  function toast(msg){var t=$('toast');t.textContent=msg;t.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.hidden=true},2200)}
+  function showView(name){
+    ['setup','loading','error','menu','ticket'].forEach(function(v){$(v).hidden=(v!==name)});
+    $('cartbar').hidden=(name!=='menu')||cart.length===0;
+    if(name==='menu')renderMenu();
+    if(name==='ticket')renderTicket();
+  }
+
+  /* ---------- GitHub data ---------- */
+  function apiGet(){
+    return fetch(syncUrl(),{headers:syncHeaders(),cache:'no-store'}).then(function(res){
+      if(res.status===404)return {ok:true,status:404,sha:null,payload:null};
+      if(!res.ok)return {ok:false,status:res.status,error:'HTTP '+res.status};
+      return res.json().then(function(j){
+        var payload=null;
+        try{payload=JSON.parse(b64dec(j.content))}catch(e){}
+        return {ok:true,status:200,sha:j.sha,payload:payload};
+      });
+    });
+  }
+  function apiPut(contentB64,sha,message){
+    var body={message:message,content:contentB64,branch:'main'};
+    if(sha)body.sha=sha;
+    return fetch(syncUrl(),{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},syncHeaders()),body:JSON.stringify(body)});
+  }
+  function normalizeProduct(p){
+    return {id:String(p.id||p.name||''),name:String(p.name||''),cat:p.cat==='coffee'?'coffee':'cookie',price:num(p.price)};
+  }
+  function extractOrders(payload){
+    var st=(payload&&payload.state)||{};
+    if(Array.isArray(payload&&payload.orders))return payload.orders;
+    return Array.isArray(st.orders)?st.orders:[];
+  }
+  function extractDeleted(payload){
+    var st=(payload&&payload.state)||{};
+    var a=Array.isArray(payload&&payload.deleted)?payload.deleted:[];
+    var b=Array.isArray(st.deleted)?st.deleted:[];
+    var out=[],seen={};
+    a.concat(b).forEach(function(x){var s=String(x);if(!seen[s]){seen[s]=1;out.push(s)}});
+    return out;
+  }
+  function extractProducts(payload){
+    var st=(payload&&payload.state)||{};
+    if(Array.isArray(st.products))return st.products;
+    return Array.isArray(payload&&payload.products)?payload.products:null;
+  }
+
+  // Merge by uid, keeping the version with the newer statusAt||ts.
+  function mergeOrders(local,remote,deleted){
+    var del={};(deleted||[]).forEach(function(u){del[String(u)]=1});
+    var map={};
+    (local||[]).concat(remote||[]).forEach(function(o){
+      if(!o)return;
+      var uid=String(o.uid||('legacy-'+o.id+'-'+o.ts));
+      if(del[uid])return;
+      var cur=map[uid];
+      if(!cur||orderTime(o)>orderTime(cur))map[uid]=clone(o);
+    });
+    return Object.keys(map).map(function(k){return map[k]});
+  }
+
+  function friendlyError(r){
+    if(r.status===401||r.status===403)return 'Hindi tinanggap ang token. Humingi ng tamang token sa staff.';
+    if(r.status===404)return 'Wala pang data sa cloud. Subukan uli sandali.';
+    return 'Hindi maabot ang cloud. Tignan ang signal, then subukan uli.'+(r.error?' ('+r.error+')':'');
+  }
+
+  function loadMenu(){
+    return apiGet().then(function(r){
+      if(!r.ok)throw new Error(friendlyError(r));
+      if(r.payload){
+        var arr=extractProducts(r.payload);
+        products=arr?arr.map(normalizeProduct):FALLBACK_PRODUCTS.map(clone);
+        var ro=extractOrders(r.payload);
+        knownOrders=ro;
+        ro.forEach(function(o){
+          var uid=String(o.uid||'');
+          if(myUids.indexOf(uid)===-1)return;
+          if(!Object.prototype.hasOwnProperty.call(statusMap,uid))statusMap[uid]=o.status||'pending';
+          if(currentOrder&&String(currentOrder.uid)===uid)currentOrder=o;
+        });
+        saveMy();
+      }else{
+        products=FALLBACK_PRODUCTS.map(clone);
+      }
+      return true;
+    }).catch(function(e){
+      $('errMsg').textContent=e.message||'Hindi ma-load ang menu. Subukan uli.';
+      showView('error');
+      return false;
+    });
+  }
+
+  /* ---------- menu ---------- */
+  function renderMenu(){
+    var list=products.filter(function(p){return p.cat===activeCat});
+    if(!list.length){
+      $('grid').innerHTML='<p class="empty">Wala pang items sa menu ngayon. I-refresh ang menu mamaya.</p>';
+      return;
+    }
+    $('grid').innerHTML=list.map(function(p){
+      var coffee=p.cat==='coffee';
+      var sz=sizeChoice[p.id]||12;
+      var sizes=coffee?('<div class="sizebar">'+[12,16].map(function(oz){
+        var on=oz===sz;
+        return '<button type="button" class="size-btn'+(on?' on':'')+'" data-oz="'+oz+'" data-id="'+esc(p.id)+'" aria-pressed="'+on+'">'+oz+' oz</button>';
+      }).join('')+'</div>'):'';
+      var price=coffee&&sz===16?money(p.price+SIZE_EXTRA):money(p.price);
+      return '<div class="tile">'+
+        '<div class="tile-head"><span class="tile-name">'+esc(p.name)+'</span><span class="tile-price">'+price+'</span></div>'+
+        '<div class="tile-sub"><span class="tile-hint">'+(coffee?'12 / 16 oz':'1 pc')+'</span>'+
+          '<div class="tile-actions">'+sizes+'<button type="button" class="add" data-add="'+esc(p.id)+'" aria-label="Idagdag ang '+esc(p.name)+'">+</button></div>'+
+        '</div></div>';
+    }).join('');
+  }
+
+  document.querySelector('.tabs').addEventListener('click',function(e){
+    var t=e.target.closest('.tab');if(!t)return;
+    activeCat=t.dataset.cat==='cookie'?'cookie':'coffee';
+    document.querySelectorAll('.tab').forEach(function(b){
+      var on=b.dataset.cat===activeCat;
+      b.classList.toggle('active',on);b.setAttribute('aria-selected',String(on));
+    });
+    renderMenu();
+  });
+
+  $('grid').addEventListener('click',function(e){
+    var sb=e.target.closest('.size-btn');
+    if(sb){sizeChoice[sb.dataset.id]=Number(sb.dataset.oz);renderMenu();return}
+    var add=e.target.closest('.add');
+    if(add)addToCart(add.dataset.add);
+  });
+
+  function lineUnit(it){return num(it.price)+(it.size===16?SIZE_EXTRA:0)}
+  function lineTotal(it){return lineUnit(it)*it.qty}
+  function cartQty(){return cart.reduce(function(s,it){return s+it.qty},0)}
+  function cartTotal(){return cart.reduce(function(s,it){return s+lineTotal(it)},0)}
+
+  function addToCart(id){
+    var p=null;
+    products.forEach(function(x){if(String(x.id)===String(id))p=x});
+    if(!p)return;
+    var size=p.cat==='coffee'?(sizeChoice[p.id]||12):null;
+    var found=null;
+    cart.forEach(function(it){if(it.id===p.id&&it.size===size)found=it});
+    if(found)found.qty++;
+    else cart.push({id:p.id,name:p.name,cat:p.cat,price:p.price,size:size,qty:1});
+    renderCartBar();
+    toast(p.name+' idinagdag');
+  }
+  function renderCartBar(){
+    var q=cartQty();
+    $('cCount').textContent=q+' item'+(q===1?'':'s');
+    $('cTotal').textContent=money(cartTotal());
+    $('cartbar').hidden=($('menu').hidden)||q===0;
+  }
+  function renderCartSheet(){
+    if(!cart.length){
+      $('cartLines').innerHTML='<p class="empty">Wala pang items. Pumili muna sa menu.</p>';
+    }else{
+      $('cartLines').innerHTML=cart.map(function(it,i){
+        return '<div class="c-row">'+
+          '<div class="c-info"><strong>'+esc(it.name)+'</strong><small>'+money(it.price)+(it.size?' · '+it.size+' oz'+(it.size===16?' +'+money(SIZE_EXTRA):''):'')+'</small></div>'+
+          '<div class="stepper"><button type="button" data-act="dec" data-i="'+i+'" aria-label="Bawasan ang '+esc(it.name)+'">−</button><span>'+it.qty+'</span><button type="button" data-act="inc" data-i="'+i+'" aria-label="Dagdagan ang '+esc(it.name)+'">+</button></div>'+
+          '<span class="c-amt">'+money(lineTotal(it))+'</span></div>';
+      }).join('');
+    }
+    $('cartFootTotal').textContent=money(cartTotal());
+    $('sendBtn').disabled=cart.length===0||sending;
+  }
+
+  $('reviewBtn').addEventListener('click',function(){renderCartSheet();$('sendErr').hidden=true;$('cartSheet').hidden=false});
+  $('closeCart').addEventListener('click',function(){$('cartSheet').hidden=true});
+  $('cartSheet').addEventListener('click',function(e){if(e.target===$('cartSheet'))$('cartSheet').hidden=true});
+  $('cartLines').addEventListener('click',function(e){
+    var b=e.target.closest('button[data-act]');if(!b)return;
+    var i=Number(b.dataset.i),it=cart[i];if(!it)return;
+    if(b.dataset.act==='inc')it.qty++;
+    else{it.qty--;if(it.qty<=0)cart.splice(i,1)}
+    renderCartSheet();renderCartBar();
+  });
+
+  /* ---------- send order (merge + PUT) ---------- */
+  function sendOrder(uid,items,total,customer){
+    var attempt;
+    function run(n){
+      if(n>4)return Promise.reject(new Error('May sabay na update sa cloud. I-send uli ang order.'));
+      return apiGet().then(function(r){
+        if(!r.ok)throw new Error(friendlyError(r));
+        var payload=r.payload||{};
+        var remoteOrders=extractOrders(payload);
+        var deleted=extractDeleted(payload);
+        var id=1;
+        remoteOrders.forEach(function(o){if(isFinite(+o.id)&&+o.id>=id)id=+o.id+1});
+        var ts=new Date().toISOString();
+        var order={id:id,uid:uid,items:items,total:num(total),profit:num(total),ts:ts,status:'pending',statusAt:ts,customer:customer,source:'menu'};
+        // Only merge this browser's own orders with the fresh remote list — never
+        // resurrect remote orders that the counter may have removed meanwhile.
+        var localMine=knownOrders.filter(function(o){return myUids.indexOf(String(o.uid))!==-1});
+        var merged=mergeOrders(localMine.concat([order]),remoteOrders,deleted);
+        var base=clone(payload);
+        if(!base.state||typeof base.state!=='object')base.state={};
+        base.version=2;
+        base.updatedAt=Date.now();
+        base.state.orders=merged;
+        base.orders=merged;
+        base.deleted=deleted;
+        base.state.deleted=deleted;
+        if(!Array.isArray(base.state.products))base.state.products=products.map(clone);
+        base.state.seq=Math.max(num(base.state.seq),id+1);
+        return apiPut(b64enc(JSON.stringify(base)),r.sha,'Menu order #'+id+' — '+customer).then(function(res){
+          if(res.status===409)return run(n+1);
+          if(!res.ok)throw new Error('Hindi na-save ang order (HTTP '+res.status+').');
+          knownOrders=merged;
+          return order;
+        });
+      });
+    }
+    return run(1);
+  }
+
+  $('sendBtn').addEventListener('click',function(){
+    if(sending||!cart.length)return;
+    if('Notification' in window&&Notification.permission==='default'){
+      try{Notification.requestPermission()}catch(e){}
+    }
+    sending=true;$('sendBtn').disabled=true;$('sendErr').hidden=true;
+    var items=cart.map(function(it){return {name:it.name,cat:it.cat,price:it.price,unit:lineUnit(it),size:it.size,qty:it.qty}});
+    var total=cartTotal();
+    var customer=($('custName').value||'').trim()||'Guest';
+    var uid=newUid();
+    sendOrder(uid,items,total,customer).then(function(order){
+      if(myUids.indexOf(uid)===-1)myUids.push(uid);
+      currentOrder=order;statusMap[uid]='pending';saveMy();
+      cart=[];renderCartBar();
+      $('cartSheet').hidden=true;$('custName').value='';
+      showView('ticket');
+      toast('Na-send ang order '+pad(order.id));
+    }).catch(function(e){
+      $('sendErr').textContent=e.message||'Hindi na-send ang order. Subukan uli.';
+      $('sendErr').hidden=false;
+    }).then(function(){sending=false;$('sendBtn').disabled=(cart.length===0)});
+  });
+
+  /* ---------- tracking ---------- */
+  function renderTicket(){
+    var o=currentOrder;if(!o)return;
+    var done=o.status==='done';
+    $('tNum').textContent=pad(o.id);
+    $('tWho').textContent='Para kay: '+(o.customer||'Guest')+' · ipakita ang number sa counter';
+    $('tStatus').textContent=done?'READY':'IN THE QUEUE';
+    $('tStatus').classList.toggle('is-ready',done);
+    $('readyStamp').hidden=!done;
+    $('readyBanner').hidden=!done;
+    $('readyLine').textContent='Order '+pad(o.id)+' — pwede mo nang kunin sa counter, '+(o.customer||'Guest')+'.';
+    $('tLines').innerHTML=(o.items||[]).map(function(it){
+      var unit=it.unit!=null?it.unit:(num(it.price)+(it.size===16?SIZE_EXTRA:0));
+      return '<div class="t-line"><span>'+Number(it.qty)+'× '+esc(it.name)+(it.size?' · '+it.size+' oz':'')+'</span><span>'+money(unit*it.qty)+'</span></div>';
+    }).join('')||'<div class="t-line"><span>Wala nang detalye</span><span></span></div>';
+    $('tTotal').textContent=money(o.total);
+    $('tTime').textContent=new Date(o.ts).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  }
+
+  function onReady(order){
+    try{
+      if('Notification' in window&&Notification.permission==='granted'){
+        new Notification('Ready na ang order mo',{body:'Order '+pad(order.id)+' — The Qookie Project'});
+      }
+    }catch(e){}
+    if(!$('ticket').hidden)renderTicket();
+  }
+
+  function poll(){
+    if(pollBusy||!token)return Promise.resolve();
+    pollBusy=true;
+    return apiGet().then(function(r){
+      if(!r.ok||!r.payload)return;
+      var ro=extractOrders(r.payload);
+      knownOrders=ro;
+      var arr=extractProducts(r.payload);
+      if(arr){
+        var np=arr.map(normalizeProduct);
+        if(JSON.stringify(np)!==JSON.stringify(products)){
+          products=np;
+          if(!$('menu').hidden)renderMenu();
+        }
+      }
+      ro.forEach(function(o){
+        var uid=String(o.uid||'');
+        if(myUids.indexOf(uid)===-1)return;
+        var status=o.status||'pending';
+        if(!Object.prototype.hasOwnProperty.call(statusMap,uid)){
+          statusMap[uid]=status;
+        }else if(statusMap[uid]!==status){
+          if(status==='done')onReady(o);
+          statusMap[uid]=status;
+        }
+        if(currentOrder&&String(currentOrder.uid)===uid){
+          currentOrder=o;saveMy();
+          if(!$('ticket').hidden)renderTicket();
+        }
+      });
+    }).catch(function(){}).then(function(){pollBusy=false});
+  }
+
+  function startPolling(){
+    if(pollingStarted)return;
+    pollingStarted=true;
+    setInterval(poll,POLL_MS);
+    document.addEventListener('visibilitychange',function(){if(!document.hidden)poll()});
+    window.addEventListener('focus',function(){poll()});
+  }
+
+  $('refreshBtn').addEventListener('click',function(){
+    $('refreshBtn').disabled=true;
+    poll().then(function(){toast('Status na-refresh')}).then(function(){$('refreshBtn').disabled=false});
+  });
+  $('againBtn').addEventListener('click',function(){
+    currentOrder=null;statusMap={};saveMy();
+    showView('menu');renderCartBar();poll();
+  });
+
+  /* ---------- boot ---------- */
+  function boot(){
+    if(!token){showView('setup');return}
+    showView('loading');
+    loadMenu().then(function(ok){
+      if(!ok)return;
+      startPolling();
+      if(currentOrder&&myUids.indexOf(String(currentOrder.uid))!==-1)showView('ticket');
+      else showView('menu');
+      renderCartBar();
+      poll();
+    });
+  }
+
+  $('connectBtn').addEventListener('click',function(){
+    var v=($('tokenInput').value||'').trim();
+    if(!v){$('setupErr').textContent='I-lagay muna ang token.';$('setupErr').hidden=false;return}
+    token=v;setLs(TOKEN_KEY,v);$('setupErr').hidden=true;boot();
+  });
+  $('tokenInput').addEventListener('keydown',function(e){if(e.key==='Enter')$('connectBtn').click()});
+  $('retryBtn').addEventListener('click',boot);
+  $('changeTokenBtn').addEventListener('click',function(){
+    token='';setLs(TOKEN_KEY,'');$('tokenInput').value='';showView('setup');
+  });
+
+  function tickClock(){
+    $('metaClock').textContent=new Date().toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'});
+  }
+  tickClock();setInterval(tickClock,30000);
+
+  loadMy();
+  boot();
+})();
+</script>
+</body>
+</html>
