@@ -62,8 +62,10 @@
   .tile{
     position:relative;text-align:left;min-height:112px;padding:12px;
     background:var(--paper);border:1px solid var(--line);color:var(--ink);
-    display:flex;flex-direction:column;justify-content:space-between;gap:6px
+    display:grid;grid-template-columns:46px minmax(0,1fr);gap:10px;align-items:center
   }
+  .tile .art{width:46px;height:46px;display:block;border:1px solid var(--line);background:var(--bg);object-fit:cover}
+  .tile-body{display:flex;flex-direction:column;justify-content:space-between;gap:6px;min-width:0;align-self:stretch}
   .tile.coffee{border-left:4px solid var(--accent)}
   .tile:active{background:color-mix(in srgb,var(--accent) 9%,var(--paper))}
   .tile .name{font-family:Georgia,serif;font-size:clamp(15px,4.2vw,19px);line-height:1.06;letter-spacing:-.025em;padding-right:30px}
@@ -249,7 +251,8 @@
     .sheet{max-width:640px}
     .sheet.side{width:min(520px,72vw);max-width:520px}
     .menu-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
-    .tile{min-height:138px;padding:16px}
+    .tile{min-height:138px;padding:16px;grid-template-columns:56px minmax(0,1fr)}
+    .tile .art{width:56px;height:56px}
     .tile .name{font-size:21px}
     .tabs{max-width:460px}
     .topbar{display:flex;align-items:baseline;justify-content:space-between;gap:16px}
@@ -715,6 +718,28 @@
     finally{syncBusy=false}
   }
 
+  function artFor(p){
+    const id=String(p.id||'');
+    const name=String(p.name||'').toLowerCase();
+    const byId={
+      'c-americano':'americano','c-spanish':'spanish-latte','c-mocha':'mocha',
+      'c-cappuccino':'cappuccino','c-caramel':'caramel-macchiato',
+      'k-matcha':'matcha','k-classic':'classic','k-red':'red-velvet',
+      'p-mwsysgbc':'biscoff','k-biscoff':'biscoff'
+    };
+    let key=byId[id];
+    if(!key){
+      if(name.includes('caramel'))key='caramel-macchiato';
+      else if(name.includes('cappuccino'))key='cappuccino';
+      else if(name.includes('spanish'))key='spanish-latte';
+      else if(name.includes('americano'))key='americano';
+      else if(name.includes('mocha'))key='mocha';
+      else if(name.includes('matcha'))key='matcha';
+      else if(name.includes('red velvet'))key='red-velvet';
+      else if(name.includes('biscoff'))key='biscoff';
+    }
+    return 'assets/'+(key||(p.cat==='coffee'?'coffee':'cookie'))+'.svg';
+  }
   function renderMenu(){
     const list=state.products.filter(p=>p.cat===activeCat);
     $('catLabel').textContent=activeCat==='coffee'?'COFFEE':'COOKIES';
@@ -723,9 +748,12 @@
     if(!list.length){menu.innerHTML='<p class="empty">No products here. Add some in Settings.</p>';return}
     menu.innerHTML=list.map(p=>`
       <button class="tile ${p.cat==='coffee'?'coffee':''}" type="button" data-id="${esc(p.id)}">
-        <span class="name">${esc(p.name)}</span>
-        <span class="price">${money(p.price)}</span>
-        <span class="hint">${p.cat==='coffee'?'12 / 16 oz':'1 pc'}</span>
+        <img class="art" src="${artFor(p)}" alt="">
+        <span class="tile-body">
+          <span class="name">${esc(p.name)}</span>
+          <span class="price">${money(p.price)}</span>
+          <span class="hint">${p.cat==='coffee'?'12 / 16 oz':'1 pc'}</span>
+        </span>
         <span class="plus" aria-hidden="true">+</span>
       </button>`).join('');
   }
