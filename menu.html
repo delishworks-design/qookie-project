@@ -81,26 +81,23 @@
   .chip.active{background:var(--tan);border-color:var(--tan);color:var(--paper);font-weight:700}
   .grid{display:flex;flex-direction:column;gap:16px}
   .card{
-    position:relative;border:1px solid var(--line);border-radius:20px;overflow:hidden;
-    background:linear-gradient(180deg,var(--cream) 0 42%,var(--brown) 42% 100%);
-    padding:0;min-height:240px;
+    border:1px solid var(--line);border-radius:18px;overflow:hidden;
+    background:var(--paper);padding:0;
   }
-  .plate{
-    height:132px;display:grid;place-items:center;overflow:hidden;
-  }
-  .plate img{width:168px;height:168px;object-fit:cover;border-radius:50%;transform:translateY(24px)}
-  .card-body{position:relative;padding:16px 16px 18px;color:var(--paper);min-height:110px}
+  .plate{height:148px;background:var(--cream);overflow:hidden}
+  .plate img{width:100%;height:100%;object-fit:cover;display:block}
+  .card-body{background:var(--brown);color:var(--paper);padding:12px 14px 14px}
   .rating{
-    position:absolute;top:-18px;left:16px;background:var(--tan);color:var(--paper);
-    border-radius:14px;padding:5px 10px;font-size:11px;font-weight:700;letter-spacing:.04em;
+    display:inline-block;background:var(--tan);color:var(--paper);
+    border-radius:10px;padding:3px 8px;font-size:10px;font-weight:700;margin-bottom:7px;
   }
-  .card-name{font-family:Georgia,serif;font-size:21px;letter-spacing:-.02em;margin-bottom:12px;max-width:78%}
-  .card-meta{display:flex;justify-content:space-between;align-items:flex-end;gap:10px}
+  .card-name{font-family:Georgia,serif;font-size:18px;letter-spacing:-.02em;margin-bottom:8px}
+  .card-meta{display:flex;justify-content:space-between;align-items:center;gap:10px}
   .card-meta span{font-size:11px;color:#D9C7B4;letter-spacing:.04em}
-  .card-meta b{font-family:Georgia,serif;font-size:20px;letter-spacing:-.03em}
+  .card-meta b{font-family:Georgia,serif;font-size:18px;letter-spacing:-.03em}
   .card-add{
-    position:absolute;right:14px;bottom:12px;width:42px;height:42px;border-radius:50%;
-    border:0;background:var(--paper);color:var(--brown);font-size:24px;line-height:1;display:grid;place-items:center;
+    width:36px;height:36px;border-radius:50%;flex:none;
+    border:0;background:var(--paper);color:var(--brown);font-size:22px;line-height:1;display:grid;place-items:center;
   }
   .empty{font-size:13px;color:var(--muted);text-align:center;padding:28px 10px;line-height:1.6}
   .cartbar{
@@ -130,7 +127,7 @@
   }
   .sheet-inner{
     width:min(430px,100%);background:var(--paper);border-radius:26px 26px 0 0;
-    padding:18px 20px calc(22px + env(safe-area-inset-bottom));max-height:90dvh;overflow:auto;
+    padding:18px 20px calc(20px + env(safe-area-inset-bottom));max-height:100dvh;overflow:auto;
     animation:slideUp .2s ease-out;
   }
   .sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
@@ -152,23 +149,26 @@
   .btn.primary{background:var(--tan);border-color:var(--tan);color:var(--paper)}
   .btn.wide{width:100%}
   .formerr{color:#9B2C2C;font-size:12px;margin:8px 0 0}
-  .detail-hero{height:250px;border-radius:20px;background:var(--cream);display:grid;place-items:center;overflow:hidden;margin-bottom:-26px;position:relative}
-  .detail-hero img{width:250px;height:250px;object-fit:cover;border-radius:50%}
+  .detail-hero{height:200px;border-radius:20px;background:var(--cream);display:grid;place-items:center;overflow:hidden;margin-bottom:-20px;position:relative}
+  .detail-hero img{width:190px;height:190px;object-fit:cover;border-radius:50%}
   .detail-back,.detail-heart{position:absolute;top:16px;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--paper);display:grid;place-items:center;color:var(--ink);z-index:2}
   .detail-back{left:16px}.detail-heart{right:16px}
-  .detail-card{position:relative;background:var(--paper);border-radius:20px 20px 0 0;padding:34px 4px 0}
+  .detail-card{position:relative;background:var(--paper);border-radius:20px 20px 0 0;padding:28px 4px 0}
   .detail-title{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
-  .detail-title h2{font-family:Georgia,serif;font-size:28px;letter-spacing:-.03em;margin:0}
-  .detail-title .price{font-family:Georgia,serif;font-size:18px}
-  .pill{display:inline-block;background:var(--tan);color:var(--paper);border-radius:12px;padding:5px 10px;font-size:11px;font-weight:700;margin-bottom:10px}
-  .section-label{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:22px 0 10px}
-  .size-chips{display:flex;gap:10px}
-  .size-chips button{min-height:42px;padding:0 18px;border-radius:21px;border:1px solid var(--line);background:var(--paper);color:var(--muted);font-size:13px}
+  .detail-title h2{font-family:Georgia,serif;font-size:24px;letter-spacing:-.03em;margin:0}
+  .detail-title .price{font-family:Georgia,serif;font-size:17px}
+  .pill{display:inline-block;background:var(--tan);color:var(--paper);border-radius:12px;padding:4px 8px;font-size:10px;font-weight:700;margin-bottom:8px}
+  .section-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:16px 0 8px}
+  .size-chips{display:flex;gap:8px}
+  .size-chips button{min-height:40px;padding:0 14px;border-radius:20px;border:1px solid var(--line);background:var(--paper);color:var(--muted);font-size:12px}
   .size-chips button.on{background:var(--tan);border-color:var(--tan);color:var(--paper);font-weight:700}
-  .about{font-size:13px;line-height:1.6;color:var(--muted);margin:0}
-  .volume-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:18px}
-  .volume-row span{font-family:Georgia,serif;font-size:15px}
-  .buy-row{display:flex;gap:10px;margin-top:24px}
+  .about{font-size:12px;line-height:1.5;color:var(--muted);margin:0}
+  .volume-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px}
+  .volume-row span{font-family:Georgia,serif;font-size:14px}
+  .buy-row{
+    position:sticky;bottom:0;z-index:2;display:flex;gap:10px;margin-top:16px;
+    background:var(--paper);padding:12px 0 2px;border-top:1px solid var(--line);
+  }
   .buy-row .btn.primary{flex:1}
   .ticket-top{display:flex;align-items:center;gap:12px;margin-bottom:18px}
   .ticket-top h2{font-family:Georgia,serif;font-size:20px;margin:0;flex:1}
@@ -203,8 +203,7 @@
     .phone{max-width:760px}
     .view{padding:26px 28px 100px}
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-    .card{min-height:250px}
-    .plate img{width:180px;height:180px}
+    .plate{height:170px}
   }
   @media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important}}
 </style>
@@ -251,7 +250,8 @@
       <input id="searchInput" type="search" placeholder="Search coffee or cookies" autocomplete="off">
     </label>
 
-    <h1 class="heading">Order coffee and cookies. Pick your items, send the order, wait for READY.</h1>
+    <h1 class="heading">Coffee and cookies. Order here.</h1>
+    <p class="note" style="margin-top:-10px;margin-bottom:16px">Pick a size, then send the order.</p>
 
     <div class="chips" id="catChips">
       <button class="chip active" type="button" data-cat="all" aria-pressed="true">All</button>
@@ -363,17 +363,17 @@
     {id:'k-dc',name:'Double Chocolate',cat:'cookie',price:25}
   ];
   var ABOUT={
-    'americano':'Espresso with hot water. Strong, clean, no fuss.',
-    'spanish latte':'Espresso with condensed milk. Sweet and milky.',
-    'mocha':'Coffee with chocolate. Rich and a little bitter.',
-    'cappuccino':'Espresso, steamed milk, and a thick foam top.',
-    'caramel macchiato':'Espresso, steamed milk, and caramel drizzle.',
-    'matcha':'Green tea cookie with a soft center.',
-    'classic':'The plain butter cookie. Simple and dependable.',
-    'cookies and cream':'Cookie dough with cream pieces folded through.',
-    'red velvet':'Red cocoa cookie with a light cream finish.',
-    'double chocolate':'Chocolate cookie with chocolate pieces.',
-    'biscoff':'Spiced biscuit cookie with a caramel tone.'
+    'americano':'Espresso with hot water.',
+    'spanish latte':'Espresso with condensed milk.',
+    'mocha':'Coffee with chocolate.',
+    'cappuccino':'Espresso, milk, and foam.',
+    'caramel macchiato':'Espresso, milk, and caramel.',
+    'matcha':'Green tea cookie.',
+    'classic':'Plain butter cookie.',
+    'cookies and cream':'Cookie with cream pieces.',
+    'red velvet':'Red cocoa cookie.',
+    'double chocolate':'Chocolate cookie.',
+    'biscoff':'Spiced biscuit cookie.'
   };
 
   function $(id){return document.getElementById(id)}
@@ -486,7 +486,16 @@
     });
   }
 
-  function heroFor(p){return p.cat==='coffee'?'assets/hero-coffee.svg':'assets/hero-cookie.svg'}
+  function heroFor(p){
+    var id=String(p.id||''),name=String(p.name||'').toLowerCase();
+    if(p.cat==='coffee'){
+      if(name.indexOf('americano')>-1)return 'assets/photos/coffee-iced.jpg';
+      if(name.indexOf('caramel')>-1)return 'assets/photos/coffee-table.jpg';
+      return 'assets/photos/coffee-latte.jpg';
+    }
+    if(id==='p-mwsysgbc'||name.indexOf('biscoff')>-1||name.indexOf('classic')>-1)return 'assets/photos/cookies-bowl.jpg';
+    return 'assets/photos/cookies-chocolate.jpg';
+  }
   function aboutFor(p){
     var n=String(p.name||'').toLowerCase();
     var key=Object.keys(ABOUT).filter(function(k){return n.indexOf(k)>-1})[0];
@@ -502,13 +511,13 @@
     if(!list.length){$('grid').innerHTML='<p class="empty">Nothing matches that search right now.</p>';return}
     $('grid').innerHTML=list.map(function(p){
       var coffee=p.cat==='coffee';
-      var price=coffee?money(p.price+10):money(p.price);
       return '<div class="card" role="button" tabindex="0" data-open="'+esc(p.id)+'">'+
         '<div class="plate"><img src="'+heroFor(p)+'" alt=""></div>'+
         '<div class="card-body"><span class="rating">★ 4.3</span>'+
           '<div class="card-name">'+esc(p.name)+'</div>'+
-          '<div class="card-meta"><span>'+(coffee?'12 / 16 oz':'1 pc')+'</span><b>'+price+'</b></div>'+
-          '<button class="card-add" type="button" data-add="'+esc(p.id)+'" aria-label="Add '+esc(p.name)+'">+</button>'+
+          '<div class="card-meta"><span>'+(coffee?'12 / 16 oz':'1 pc')+'</span><b>'+money(p.price)+'</b>'+
+            '<button class="card-add" type="button" data-add="'+esc(p.id)+'" aria-label="Add '+esc(p.name)+'">+</button>'+
+          '</div>'+
         '</div></div>';
     }).join('');
   }
