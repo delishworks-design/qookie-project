@@ -3,13 +3,13 @@
   Aesthetic: a receipt on a cafe counter — thermal paper, ink rules, mono prices, one violet stamp.
   Memorable move: the ticket stub's oversized order number that flips from IN THE QUEUE to READY.
 -->
-<html lang="fil">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#F7F1E4">
-<meta name="description" content="Smart menu ng The Qookie Project. Pumili ng coffee o cookie, i-send ang order, at hintayin ang READY sa counter.">
-<title>Menu ng Qookie — pumili, mag-order, hintayin ang ready</title>
+<meta name="description" content="Order coffee and cookies at The Qookie Project. Pick your cup, send the order, watch for READY.">
+<title>The Qookie Project — Order here</title>
 <style>
   :root{
     --cream:#F7F1E4;
@@ -48,7 +48,9 @@
 
   /* menu tiles */
   .grid{display:grid;grid-template-columns:1fr}
-  .tile{border-bottom:1px solid var(--hair);padding:12px 0}
+  .tile{border-bottom:1px solid var(--hair);padding:12px 0;display:grid;grid-template-columns:64px minmax(0,1fr);gap:12px;align-items:center}
+  .tile-art{width:64px;height:64px;display:block;border:1px solid var(--hair);background:var(--bg);object-fit:cover}
+  .tile-body{min-width:0}
   .tile-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
   .tile-name{font-size:18px;letter-spacing:-.01em}
   .tile-price{font-family:"Courier New",monospace;font-size:18px;font-weight:700;letter-spacing:-.05em;white-space:nowrap}
@@ -128,6 +130,8 @@
     body{padding-left:24px;padding-right:24px}
     .paper{padding:28px 32px}
     .grid{grid-template-columns:1fr 1fr;column-gap:28px}
+    .tile{grid-template-columns:72px minmax(0,1fr)}
+    .tile-art{width:72px;height:72px}
     .actions{grid-template-columns:1fr 1fr}
   }
   @media (prefers-reduced-motion:reduce){
@@ -146,33 +150,33 @@
 
   <!-- staff setup: token is kept on this device, shared with index.html -->
   <section id="setup" aria-labelledby="setupTitle">
-    <h1 id="setupTitle" class="lede">Setup para sa staff.</h1>
-    <p class="note">I-lagay ang sync token para mak-onekta ang menu. Itatago lang ito sa device na 'to — hindi makikita ng ibang tao.</p>
+    <h1 id="setupTitle" class="lede">Staff setup.</h1>
+    <p class="note">Enter the sync token to connect this menu. It stays on this device. Customers never see it.</p>
     <div class="field">
       <label for="tokenInput">Sync token</label>
-      <input id="tokenInput" type="password" inputmode="text" autocomplete="off" spellcheck="false" placeholder="I-paste ang token">
+      <input id="tokenInput" type="password" inputmode="text" autocomplete="off" spellcheck="false" placeholder="Paste the token">
     </div>
     <div class="state-actions"><button id="connectBtn" class="btn primary" type="button">Connect</button></div>
     <p id="setupErr" class="formerr" hidden></p>
   </section>
 
   <section id="loading" hidden>
-    <p class="state-note">Kinukuha ang menu…</p>
+    <p class="state-note">Getting the menu…</p>
   </section>
 
   <section id="error" hidden>
-    <h1 class="lede">Hindi ma-load ang menu.</h1>
+    <h1 class="lede">The menu didn't load.</h1>
     <p id="errMsg" class="state-note"></p>
     <div class="state-actions">
-      <button id="retryBtn" class="btn primary" type="button">Subukan uli</button>
-      <button id="changeTokenBtn" class="linkbtn" type="button">Palitan ang token</button>
+      <button id="retryBtn" class="btn primary" type="button">Try again</button>
+      <button id="changeTokenBtn" class="linkbtn" type="button">Use a different token</button>
     </div>
   </section>
 
   <section id="menu" hidden>
-    <h1 class="lede">Menu ng Qookie — pumili, mag-order, hintayin ang ready.</h1>
-    <p class="note">Piliin ang gusto mo, tap +, then i-send ang order.</p>
-    <div class="tabs" role="tablist" aria-label="Kategorya">
+    <h1 class="lede">Order coffee and cookies. Pick your items, send the order, wait for READY.</h1>
+    <p class="note">Choose a size for coffee. Tap + to add.</p>
+    <div class="tabs" role="tablist" aria-label="Categories">
       <button class="tab active" type="button" role="tab" data-cat="coffee" aria-selected="true">Coffee</button>
       <button class="tab" type="button" role="tab" data-cat="cookie" aria-selected="false">Cookies</button>
     </div>
@@ -181,12 +185,12 @@
 
   <section id="ticket" hidden>
     <div id="readyBanner" class="banner" hidden>
-      <b>READY NA ANG ORDER MO</b>
-      <span id="readyLine">Order — pwede mo nang kunin sa counter.</span>
+      <b>YOUR ORDER IS READY</b>
+      <span id="readyLine">Order — pick it up at the counter.</span>
     </div>
 
     <div class="stub">
-      <div class="stub-label">ANG ORDER MO</div>
+      <div class="stub-label">YOUR ORDER</div>
       <div id="tNum" class="stub-num">#000</div>
       <div class="tear"></div>
       <div id="tStatus" class="stub-status">IN THE QUEUE</div>
@@ -201,8 +205,8 @@
     </div>
 
     <div class="actions">
-      <button id="refreshBtn" class="btn primary" type="button">I-refresh ang status</button>
-      <button id="againBtn" class="btn" type="button">Mag-order uli</button>
+      <button id="refreshBtn" class="btn primary" type="button">Check status</button>
+      <button id="againBtn" class="btn" type="button">Order again</button>
     </div>
   </section>
 </main>
@@ -211,25 +215,25 @@
 <div id="cartbar" class="cartbar" hidden>
   <span id="cCount" class="c-count">0 items</span>
   <span id="cTotal" class="c-total">₱0</span>
-  <button id="reviewBtn" class="review-btn" type="button">I-review ang order</button>
+  <button id="reviewBtn" class="review-btn" type="button">Review order</button>
 </div>
 
 <!-- cart sheet -->
 <div id="cartSheet" class="overlay" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="cartTitle">
     <div class="sheet-head">
-      <h2 id="cartTitle" class="sheet-title">I-review ang order</h2>
-      <button id="closeCart" class="sheet-close" type="button">Isara</button>
+      <h2 id="cartTitle" class="sheet-title">Review order</h2>
+      <button id="closeCart" class="sheet-close" type="button">Close</button>
     </div>
     <div id="cartLines"></div>
     <div class="field">
-      <label for="custName">Pangalan mo <span style="text-transform:none;letter-spacing:0">(optional)</span></label>
+      <label for="custName">Your name <span style="text-transform:none;letter-spacing:0">(optional)</span></label>
       <input id="custName" type="text" maxlength="40" autocomplete="off" placeholder="Guest">
     </div>
     <div class="sheet-foot">
       <span class="sum">TOTAL<b id="cartFootTotal">₱0</b></span>
     </div>
-    <div class="sendwrap"><button id="sendBtn" class="btn primary wide" type="button">I-send ang order</button></div>
+    <div class="sendwrap"><button id="sendBtn" class="btn primary wide" type="button">Send order</button></div>
     <p id="sendErr" class="formerr" hidden></p>
   </div>
 </div>
@@ -353,9 +357,9 @@
   }
 
   function friendlyError(r){
-    if(r.status===401||r.status===403)return 'Hindi tinanggap ang token. Humingi ng tamang token sa staff.';
-    if(r.status===404)return 'Wala pang data sa cloud. Subukan uli sandali.';
-    return 'Hindi maabot ang cloud. Tignan ang signal, then subukan uli.'+(r.error?' ('+r.error+')':'');
+    if(r.status===401||r.status===403)return 'That token was rejected. Ask staff for the right one.';
+    if(r.status===404)return 'No cloud data yet. Try again in a moment.';
+    return 'Can\'t reach the cloud. Check the signal and try again.'+(r.error?' ('+r.error+')':'');
   }
 
   function loadMenu(){
@@ -378,17 +382,39 @@
       }
       return true;
     }).catch(function(e){
-      $('errMsg').textContent=e.message||'Hindi ma-load ang menu. Subukan uli.';
+      $('errMsg').textContent=e.message||'The menu didn\'t load. Try again.';
       showView('error');
       return false;
     });
   }
 
   /* ---------- menu ---------- */
+  function artFor(p){
+    var id=String(p.id||'');
+    var name=String(p.name||'').toLowerCase();
+    var byId={
+      'c-americano':'americano','c-spanish':'spanish-latte','c-mocha':'mocha',
+      'c-cappuccino':'cappuccino','c-caramel':'caramel-macchiato',
+      'k-matcha':'matcha','k-classic':'classic','k-red':'red-velvet',
+      'p-mwsysgbc':'biscoff','k-biscoff':'biscoff'
+    };
+    var key=byId[id];
+    if(!key){
+      if(name.indexOf('caramel')>-1)key='caramel-macchiato';
+      else if(name.indexOf('cappuccino')>-1)key='cappuccino';
+      else if(name.indexOf('spanish')>-1)key='spanish-latte';
+      else if(name.indexOf('americano')>-1)key='americano';
+      else if(name.indexOf('mocha')>-1)key='mocha';
+      else if(name.indexOf('matcha')>-1)key='matcha';
+      else if(name.indexOf('red velvet')>-1)key='red-velvet';
+      else if(name.indexOf('biscoff')>-1)key='biscoff';
+    }
+    return 'assets/'+(key||(p.cat==='coffee'?'coffee':'cookie'))+'.svg';
+  }
   function renderMenu(){
     var list=products.filter(function(p){return p.cat===activeCat});
     if(!list.length){
-      $('grid').innerHTML='<p class="empty">Wala pang items sa menu ngayon. I-refresh ang menu mamaya.</p>';
+      $('grid').innerHTML='<p class="empty">Nothing on the menu right now. Check back in a bit.</p>';
       return;
     }
     $('grid').innerHTML=list.map(function(p){
@@ -400,9 +426,12 @@
       }).join('')+'</div>'):'';
       var price=coffee&&sz===16?money(p.price+SIZE_EXTRA):money(p.price);
       return '<div class="tile">'+
-        '<div class="tile-head"><span class="tile-name">'+esc(p.name)+'</span><span class="tile-price">'+price+'</span></div>'+
-        '<div class="tile-sub"><span class="tile-hint">'+(coffee?'12 / 16 oz':'1 pc')+'</span>'+
-          '<div class="tile-actions">'+sizes+'<button type="button" class="add" data-add="'+esc(p.id)+'" aria-label="Idagdag ang '+esc(p.name)+'">+</button></div>'+
+        '<img class="tile-art" src="'+artFor(p)+'" alt="">'+
+        '<div class="tile-body">'+
+          '<div class="tile-head"><span class="tile-name">'+esc(p.name)+'</span><span class="tile-price">'+price+'</span></div>'+
+          '<div class="tile-sub"><span class="tile-hint">'+(coffee?'12 / 16 oz':'1 pc')+'</span>'+
+            '<div class="tile-actions">'+sizes+'<button type="button" class="add" data-add="'+esc(p.id)+'" aria-label="Add '+esc(p.name)+'">+</button></div>'+
+          '</div>'+
         '</div></div>';
     }).join('');
   }
@@ -439,7 +468,7 @@
     if(found)found.qty++;
     else cart.push({id:p.id,name:p.name,cat:p.cat,price:p.price,size:size,qty:1});
     renderCartBar();
-    toast(p.name+' idinagdag');
+    toast(p.name+' added');
   }
   function renderCartBar(){
     var q=cartQty();
@@ -449,12 +478,12 @@
   }
   function renderCartSheet(){
     if(!cart.length){
-      $('cartLines').innerHTML='<p class="empty">Wala pang items. Pumili muna sa menu.</p>';
+      $('cartLines').innerHTML='<p class="empty">Your cart is empty. Pick something from the menu.</p>';
     }else{
       $('cartLines').innerHTML=cart.map(function(it,i){
         return '<div class="c-row">'+
           '<div class="c-info"><strong>'+esc(it.name)+'</strong><small>'+money(it.price)+(it.size?' · '+it.size+' oz'+(it.size===16?' +'+money(SIZE_EXTRA):''):'')+'</small></div>'+
-          '<div class="stepper"><button type="button" data-act="dec" data-i="'+i+'" aria-label="Bawasan ang '+esc(it.name)+'">−</button><span>'+it.qty+'</span><button type="button" data-act="inc" data-i="'+i+'" aria-label="Dagdagan ang '+esc(it.name)+'">+</button></div>'+
+          '<div class="stepper"><button type="button" data-act="dec" data-i="'+i+'" aria-label="Decrease '+esc(it.name)+'">−</button><span>'+it.qty+'</span><button type="button" data-act="inc" data-i="'+i+'" aria-label="Increase '+esc(it.name)+'">+</button></div>'+
           '<span class="c-amt">'+money(lineTotal(it))+'</span></div>';
       }).join('');
     }
@@ -477,7 +506,7 @@
   function sendOrder(uid,items,total,customer){
     var attempt;
     function run(n){
-      if(n>4)return Promise.reject(new Error('May sabay na update sa cloud. I-send uli ang order.'));
+      if(n>4)return Promise.reject(new Error('Two updates hit the cloud at once. Send the order again.'));
       return apiGet().then(function(r){
         if(!r.ok)throw new Error(friendlyError(r));
         var payload=r.payload||{};
@@ -503,7 +532,7 @@
         base.state.seq=Math.max(num(base.state.seq),id+1);
         return apiPut(b64enc(JSON.stringify(base)),r.sha,'Menu order #'+id+' — '+customer).then(function(res){
           if(res.status===409)return run(n+1);
-          if(!res.ok)throw new Error('Hindi na-save ang order (HTTP '+res.status+').');
+          if(!res.ok)throw new Error('The order wasn\'t saved (HTTP '+res.status+').');
           knownOrders=merged;
           return order;
         });
@@ -528,9 +557,9 @@
       cart=[];renderCartBar();
       $('cartSheet').hidden=true;$('custName').value='';
       showView('ticket');
-      toast('Na-send ang order '+pad(order.id));
+      toast('Order #'+pad(order.id)+' sent');
     }).catch(function(e){
-      $('sendErr').textContent=e.message||'Hindi na-send ang order. Subukan uli.';
+      $('sendErr').textContent=e.message||'The order didn\'t go through. Try again.';
       $('sendErr').hidden=false;
     }).then(function(){sending=false;$('sendBtn').disabled=(cart.length===0)});
   });
@@ -540,16 +569,16 @@
     var o=currentOrder;if(!o)return;
     var done=o.status==='done';
     $('tNum').textContent=pad(o.id);
-    $('tWho').textContent='Para kay: '+(o.customer||'Guest')+' · ipakita ang number sa counter';
+    $('tWho').textContent='For '+(o.customer||'Guest')+' · show this number at the counter';
     $('tStatus').textContent=done?'READY':'IN THE QUEUE';
     $('tStatus').classList.toggle('is-ready',done);
     $('readyStamp').hidden=!done;
     $('readyBanner').hidden=!done;
-    $('readyLine').textContent='Order '+pad(o.id)+' — pwede mo nang kunin sa counter, '+(o.customer||'Guest')+'.';
+    $('readyLine').textContent='Order #'+pad(o.id)+' — ready at the counter for '+(o.customer||'Guest')+'.';
     $('tLines').innerHTML=(o.items||[]).map(function(it){
       var unit=it.unit!=null?it.unit:(num(it.price)+(it.size===16?SIZE_EXTRA:0));
       return '<div class="t-line"><span>'+Number(it.qty)+'× '+esc(it.name)+(it.size?' · '+it.size+' oz':'')+'</span><span>'+money(unit*it.qty)+'</span></div>';
-    }).join('')||'<div class="t-line"><span>Wala nang detalye</span><span></span></div>';
+    }).join('')||'<div class="t-line"><span>No item details</span><span></span></div>';
     $('tTotal').textContent=money(o.total);
     $('tTime').textContent=new Date(o.ts).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
   }
@@ -557,7 +586,7 @@
   function onReady(order){
     try{
       if('Notification' in window&&Notification.permission==='granted'){
-        new Notification('Ready na ang order mo',{body:'Order '+pad(order.id)+' — The Qookie Project'});
+        new Notification('Your order is ready',{body:'Order #'+pad(order.id)+' — The Qookie Project'});
       }
     }catch(e){}
     if(!$('ticket').hidden)renderTicket();
@@ -606,7 +635,7 @@
 
   $('refreshBtn').addEventListener('click',function(){
     $('refreshBtn').disabled=true;
-    poll().then(function(){toast('Status na-refresh')}).then(function(){$('refreshBtn').disabled=false});
+    poll().then(function(){toast('Status checked')}).then(function(){$('refreshBtn').disabled=false});
   });
   $('againBtn').addEventListener('click',function(){
     currentOrder=null;statusMap={};saveMy();
@@ -629,7 +658,7 @@
 
   $('connectBtn').addEventListener('click',function(){
     var v=($('tokenInput').value||'').trim();
-    if(!v){$('setupErr').textContent='I-lagay muna ang token.';$('setupErr').hidden=false;return}
+    if(!v){$('setupErr').textContent='Enter the token first.';$('setupErr').hidden=false;return}
     token=v;setLs(TOKEN_KEY,v);$('setupErr').hidden=true;boot();
   });
   $('tokenInput').addEventListener('keydown',function(e){if(e.key==='Enter')$('connectBtn').click()});
