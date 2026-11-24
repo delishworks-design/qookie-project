@@ -211,17 +211,6 @@
 <body>
 
 <div class="phone">
-  <section id="setup" class="view">
-    <h1 class="lede">Staff key.</h1>
-    <p class="note">Only needed to send orders to the counter. The menu works without it.</p>
-    <div class="field">
-      <label for="tokenInput">Sync token</label>
-      <input id="tokenInput" type="password" autocomplete="off" spellcheck="false" placeholder="Paste the token">
-    </div>
-    <p id="setupErr" class="formerr" hidden></p>
-    <div class="state-actions"><button id="connectBtn" class="btn primary" type="button">Connect</button></div>
-  </section>
-
   <section id="loading" class="view" hidden>
     <p class="state-note">Getting the menu…</p>
   </section>
@@ -231,7 +220,6 @@
     <p id="errMsg" class="state-note"></p>
     <div class="state-actions">
       <button id="retryBtn" class="btn primary" type="button">Try again</button>
-      <button id="changeTokenBtn" class="linkbtn" type="button">Use a different token</button>
     </div>
   </section>
 
@@ -267,9 +255,6 @@
       </button>
       <button id="navOrders" type="button">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3h14v18l-7-4-7 4z"/></svg>Orders
-      </button>
-      <button id="navAccount" type="button">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>Account
       </button>
     </nav>
   </section>
@@ -346,13 +331,21 @@
   'use strict';
 
   var REPO_DEFAULT='delishworks-design/qookie-project-data';
-  var TOKEN_KEY='qookie.sync.token', REPO_KEY='qookie.sync.repo';
-  var MY_KEY='qookie.menu.orders', LAST_KEY='qookie.menu.last';
-  var API='https://api.github.com/repos/', SIZE_EXTRA=10, POLL_MS=5000;
+  var REPO_KEY='qookie.sync.repo';
+  var MY_KEY='qookie.menu.orders', LAST_KEY='qookie.menu.last', PENDING_KEY='qookie.menu.pending';
+  var SIZE_EXTRA=10, POLL_MS=5000;
   var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnZ2Fzd2Jqc215dmZoZW9mbm5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE2MzU5MDgsImV4cCI6MjEwNzIxMTkwOH0.5iV_nWSia3LaKSjTqoQtb8e3ZcAvJd8K3Vhg8b9Dwx4';
   var SB_WS='wss://vggaswbjsmyvfheofnnj.supabase.co/realtime/v1/websocket?apikey='+encodeURIComponent(SB_KEY)+'&vsn=1.0.0';
   var SB_TOPIC='realtime:qookie-orders';
-  var rt=null,rtReady=false;
+  var rt=null,rtReady=false,pending=[];
+  function loadPending(){try{pending=JSON.parse(getLs(PENDING_KEY)||'[]');if(!Array.isArray(pending))pending=[]}catch(e){pending=[]}}
+  function savePending(){setLs(PENDING_KEY,JSON.stringify(pending))}
+  function flushPending(){
+    if(!rtReady||!pending.length)return;
+    var list=pending.slice();pending=[];savePending();
+    list.forEach(function(o){rtRaw('broadcast',{event:'order',payload:o},'b'+Date.now()+Math.random())});
+    toast(list.length+' queued order'+(list.length===1?'':'s')+' sent');
+  }
   function rtRaw(event,payload,ref){try{rt.send(JSON.stringify({topic:SB_TOPIC,event:event,payload:payload,ref:ref,join_ref:'1'}))}catch(e){}}
   function rtConnect(onOrder){
     if(rt)return;
@@ -360,7 +353,7 @@
     rt.onopen=function(){rtRaw('phx_join',{config:{broadcast:{self:false}}},'1')};
     rt.onmessage=function(ev){try{
       var m=JSON.parse(ev.data);
-      if(m.event==='phx_reply'&&m.ref==='1')rtReady=true;
+      if(m.event==='phx_reply'&&m.ref==='1'){rtReady=true;flushPending()}
       else if(m.event==='broadcast'&&m.payload&&m.payload.event==='order'&&onOrder)onOrder(m.payload.payload);
     }catch(e){}};
     rt.onclose=function(){rt=null;rtReady=false;setTimeout(function(){rtConnect(onOrder)},4000)};
@@ -404,18 +397,13 @@
   function num(v){var n=Number(v);return isFinite(n)?Math.round(n*100)/100:0}
   function money(n){n=num(n);return '₱'+n.toLocaleString('en-PH',{minimumFractionDigits:Number.isInteger(n)?0:2,maximumFractionDigits:2})}
   function pad(n){return '#'+String(n).padStart(3,'0')}
-  function b64enc(str){var bytes=new TextEncoder().encode(str),bin='';bytes.forEach(function(b){bin+=String.fromCharCode(b)});return btoa(bin)}
-  function b64dec(str){var bin=atob(String(str||'').replace(/\s/g,''));return new TextDecoder().decode(Uint8Array.from(bin,function(c){return c.charCodeAt(0)}))}
   function newUid(){return Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10)}
   function orderTime(o){return new Date((o&&(o.statusAt||o.ts))||0).getTime()||0}
   function getLs(k){try{return localStorage.getItem(k)}catch(e){return null}}
   function setLs(k,v){try{localStorage.setItem(k,v)}catch(e){}}
 
-  var token=getLs(TOKEN_KEY)||'';
   function repoName(){return getLs(REPO_KEY)||REPO_DEFAULT}
-  function syncUrl(){return API+repoName()+'/contents/data.json'}
   function rawUrl(){return 'https://raw.githubusercontent.com/'+repoName()+'/main/data.json?t='+Date.now()}
-  function syncHeaders(){return {Authorization:'Bearer '+token,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'}}
 
   var products=[],photos=[],activeCat='all',searchTerm='',cart=[];
   var detailId=null,detailSize=12,detailQty=1;
@@ -429,7 +417,7 @@
   function saveMy(){setLs(MY_KEY,JSON.stringify(myUids));setLs(LAST_KEY,JSON.stringify(currentOrder||null))}
   function toast(msg){var t=$('toast');t.textContent=msg;t.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.hidden=true},2200)}
   function showView(name){
-    ['setup','loading','error','menu','ticket'].forEach(function(v){$(v).hidden=(v!==name)});
+    ['loading','error','menu','ticket'].forEach(function(v){$(v).hidden=(v!==name)});
     $('cartbar').hidden=(name!=='menu')||cart.length===0;
     if(name==='menu')renderMenu();
     if(name==='ticket')renderTicket();
@@ -437,27 +425,11 @@
   }
 
   function apiGet(){
-    if(!token){
-      return fetch(rawUrl(),{cache:'no-store'}).then(function(res){
-        if(res.status===404)return {ok:true,status:404,sha:null,payload:null};
-        if(!res.ok)return {ok:false,status:res.status,error:'HTTP '+res.status};
-        return res.json().then(function(j){return {ok:true,status:200,sha:null,payload:j}});
-      });
-    }
-    return fetch(syncUrl(),{headers:syncHeaders(),cache:'no-store'}).then(function(res){
+    return fetch(rawUrl(),{cache:'no-store'}).then(function(res){
       if(res.status===404)return {ok:true,status:404,sha:null,payload:null};
       if(!res.ok)return {ok:false,status:res.status,error:'HTTP '+res.status};
-      return res.json().then(function(j){
-        var payload=null;
-        try{payload=JSON.parse(b64dec(j.content))}catch(e){}
-        return {ok:true,status:200,sha:j.sha,payload:payload};
-      });
+      return res.json().then(function(j){return {ok:true,status:200,sha:null,payload:j}});
     });
-  }
-  function apiPut(contentB64,sha,message){
-    var body={message:message,content:contentB64,branch:'main'};
-    if(sha)body.sha=sha;
-    return fetch(syncUrl(),{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},syncHeaders()),body:JSON.stringify(body)});
   }
   function normalizeProduct(p){return {id:String(p.id||p.name||''),name:String(p.name||''),cat:p.cat==='coffee'?'coffee':'cookie',price:num(p.price),photo:p.photo?String(p.photo):undefined}}
   function extractOrders(payload){
@@ -488,7 +460,6 @@
     return Object.keys(map).map(function(k){return map[k]});
   }
   function friendlyError(r){
-    if(r.status===401||r.status===403)return 'That token was rejected. Ask staff for the right one.';
     if(r.status===404)return 'No cloud data yet. Try again in a moment.';
     return 'Can\'t reach the cloud. Check the signal and try again.'+(r.error?' ('+r.error+')':'');
   }
@@ -666,43 +637,15 @@
   });
 
   function sendOrder(uid,items,total,customer){
-    if(!token){
-      return apiGet().then(function(r){
-        if(!r.ok)throw new Error(friendlyError(r));
-        var payload=r.payload||{},remoteOrders=extractOrders(payload),id=1;
-        remoteOrders.forEach(function(o){if(isFinite(+o.id)&&+o.id>=id)id=+o.id+1});
-        var ts=new Date().toISOString();
-        var order={id:id,uid:uid,items:items,total:num(total),profit:num(total),ts:ts,status:'pending',statusAt:ts,customer:customer,source:'menu'};
+    return apiGet().then(function(r){
+      if(!r.ok)throw new Error(friendlyError(r));
+      var payload=r.payload||{},remoteOrders=extractOrders(payload),id=1;
+      remoteOrders.forEach(function(o){if(isFinite(+o.id)&&+o.id>=id)id=+o.id+1});
+      var ts=new Date().toISOString();
+      var order={id:id,uid:uid,items:items,total:num(total),profit:num(total),ts:ts,status:'pending',statusAt:ts,customer:customer,source:'menu'};
         knownOrders=mergeOrders(knownOrders.concat([order]),remoteOrders,extractDeleted(payload));
-        return rtSend(order);
+        return rtSend(order).catch(function(){pending.push(order);savePending();return order});
       });
-    }
-    function run(n){
-      if(n>4)return Promise.reject(new Error('Two updates hit the cloud at once. Send the order again.'));
-      return apiGet().then(function(r){
-        if(!r.ok)throw new Error(friendlyError(r));
-        var payload=r.payload||{},remoteOrders=extractOrders(payload),deleted=extractDeleted(payload),id=1;
-        remoteOrders.forEach(function(o){if(isFinite(+o.id)&&+o.id>=id)id=+o.id+1});
-        var ts=new Date().toISOString();
-        var order={id:id,uid:uid,items:items,total:num(total),profit:num(total),ts:ts,status:'pending',statusAt:ts,customer:customer,source:'menu'};
-        var localMine=knownOrders.filter(function(o){return myUids.indexOf(String(o.uid))!==-1});
-        var merged=mergeOrders(localMine.concat([order]),remoteOrders,deleted);
-        var base=clone(payload);
-        if(!base.state||typeof base.state!=='object')base.state={};
-        base.version=2;base.updatedAt=Date.now();
-        base.state.orders=merged;base.orders=merged;
-        base.deleted=deleted;base.state.deleted=deleted;
-        if(!Array.isArray(base.state.products))base.state.products=products.map(clone);
-        base.state.seq=Math.max(num(base.state.seq),id+1);
-        return apiPut(b64enc(JSON.stringify(base)),r.sha,'Menu order #'+id+' — '+customer).then(function(res){
-          if(res.status===409)return run(n+1);
-          if(!res.ok)throw new Error('The order wasn\'t saved (HTTP '+res.status+').');
-          knownOrders=merged;
-          return order;
-        });
-      });
-    }
-    return run(1);
   }
 
   $('sendBtn').addEventListener('click',function(){
@@ -719,7 +662,7 @@
       cart=[];renderCartBar();
       $('cartSheet').hidden=true;$('custName').value='';
       showView('ticket');
-      toast('Order #'+pad(order.id)+' sent');
+      toast(pending.indexOf(order)!==-1?'Order saved — will send when the counter is online':'Order #'+pad(order.id)+' sent');
     }).catch(function(e){
       $('sendErr').textContent=e.message||'The order didn\'t go through. Try again.';
       $('sendErr').hidden=false;
@@ -752,7 +695,7 @@
     if(!$('ticket').hidden)renderTicket();
   }
   function poll(){
-    if(pollBusy||!token)return Promise.resolve();
+    if(pollBusy)return Promise.resolve();
     pollBusy=true;
     return apiGet().then(function(r){
       if(!r.ok||!r.payload)return;
@@ -802,7 +745,6 @@
   $('bellBtn').addEventListener('click',function(){showView('ticket');poll()});
   $('navMenu').addEventListener('click',function(){showView('menu');renderCartBar()});
   $('navOrders').addEventListener('click',function(){showView('ticket');poll()});
-  $('navAccount').addEventListener('click',function(){showView('setup')});
 
   function boot(){
     rtConnect();
@@ -816,20 +758,12 @@
       poll();
     });
   }
-  $('connectBtn').addEventListener('click',function(){
-    var v=($('tokenInput').value||'').trim();
-    if(!v){$('setupErr').textContent='Enter the token first.';$('setupErr').hidden=false;return}
-    token=v;setLs(TOKEN_KEY,v);$('setupErr').hidden=true;boot();
-  });
-  $('tokenInput').addEventListener('keydown',function(e){if(e.key==='Enter')$('connectBtn').click()});
   $('retryBtn').addEventListener('click',boot);
-  $('changeTokenBtn').addEventListener('click',function(){
-    token='';setLs(TOKEN_KEY,'');$('tokenInput').value='';showView('setup');
-  });
   function tickClock(){$('metaClock').textContent=new Date().toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'})}
   tickClock();setInterval(tickClock,30000);
 
   loadMy();
+  loadPending();
   boot();
 })();
 </script>
