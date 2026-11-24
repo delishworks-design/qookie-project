@@ -197,6 +197,10 @@
   .state-actions{margin-top:18px;display:flex;flex-wrap:wrap;gap:10px}
   .linkbtn{border:0;background:transparent;color:var(--tan);font-size:12px;text-decoration:underline;padding:10px}
   #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(96px + env(safe-area-inset-bottom));z-index:80;background:var(--brown);color:var(--paper);font-size:12px;padding:10px 16px;border-radius:16px;max-width:86vw;text-align:center}
+  .ready-pop{position:fixed;top:calc(14px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:95;width:min(92vw,360px);background:var(--ok);color:#fff;border-radius:16px;padding:14px 38px 14px 16px;box-shadow:0 10px 30px rgba(0,0,0,.28);font-size:13px;line-height:1.5}
+  .ready-pop b{display:block;font-size:15px;letter-spacing:.06em;margin-bottom:4px}
+  .ready-pop .btn{margin-top:10px;width:100%;background:var(--paper);color:var(--brown);border:0}
+  .ready-pop button[aria-label]{position:absolute;top:6px;right:8px;background:none;border:0;color:#fff;font-size:20px;line-height:1;cursor:pointer}
   @keyframes slideUp{from{transform:translateY(18px);opacity:.5}to{transform:translateY(0);opacity:1}}
   @media (min-width:700px){
     body{padding-top:34px}
@@ -325,6 +329,12 @@
   </div>
 </div>
 
+<div id="readyPop" class="ready-pop" role="alert" hidden>
+  <button id="readyPopClose" type="button" aria-label="Close">×</button>
+  <b>YOUR ORDER IS READY</b>
+  <span id="readyPopText">—</span>
+  <button id="readyPopView" class="btn" type="button">View order</button>
+</div>
 <div id="toast" role="status" hidden></div>
 
 <script>
@@ -722,6 +732,7 @@
   }
   async   function enableAlerts(){
     if(!('Notification' in window)){toast('Alerts are not supported on this device');return}
+    if(Notification.permission==='denied'){toast('Allow notifications for this site in your browser settings');return}
     try{
       Notification.requestPermission().then(function(p){
         toast(p==='granted'?'Alerts on — we will notify you when it is ready':'Alerts off — check your order status here');
@@ -729,10 +740,25 @@
     }catch(e){toast('Could not turn on alerts')}
   }
   $('alertsBtn').addEventListener('click',enableAlerts);
+  $('readyPopClose').addEventListener('click',function(){$('readyPop').hidden=true});
+  $('readyPopView').addEventListener('click',function(){$('readyPop').hidden=true;showView('ticket');poll()});
   async function onReady(order){
     var msg='Order '+pad(order.id)+' is ready at the counter';
     toast(msg);
+    try{
+      $('readyPopText').textContent=msg+' — pick it up at the counter.';
+      $('readyPop').hidden=false;
+    }catch(e){}
     try{if(navigator.vibrate)navigator.vibrate([120,60,120])}catch(e){}
+    try{
+      var Ctx=window.AudioContext||window.webkitAudioContext;
+      if(Ctx){
+        var ac=new Ctx(),osc=ac.createOscillator(),gain=ac.createGain();
+        osc.connect(gain);gain.connect(ac.destination);
+        osc.frequency.value=880;gain.gain.value=0.06;
+        osc.start();setTimeout(function(){osc.stop();ac.close()},250);
+      }
+    }catch(e){}
     if('Notification' in window){
       try{
         if(Notification.permission==='granted'){
