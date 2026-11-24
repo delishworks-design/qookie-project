@@ -536,6 +536,23 @@
   const REPO_DEFAULT='delishworks-design/qookie-project-data';
   const SYNC_TOKEN_KEY='qookie.sync.token';
   const SYNC_REPO_KEY='qookie.sync.repo';
+  const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnZ2Fzd2Jqc215dmZoZW9mbm5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE2MzU5MDgsImV4cCI6MjEwNzIxMTkwOH0.5iV_nWSia3LaKSjTqoQtb8e3ZcAvJd8K3Vhg8b9Dwx4';
+  const SB_WS='wss://vggaswbjsmyvfheofnnj.supabase.co/realtime/v1/websocket?apikey='+encodeURIComponent(SB_KEY)+'&vsn=1.0.0';
+  const SB_TOPIC='realtime:qookie-orders';
+  let rt=null,rtReady=false;
+  function rtRaw(event,payload,ref){try{rt.send(JSON.stringify({topic:SB_TOPIC,event:event,payload:payload,ref:ref,join_ref:'1'}))}catch(e){}}
+  function rtConnect(onOrder){
+    if(rt)return;
+    try{rt=new WebSocket(SB_WS)}catch(e){return}
+    rt.onopen=()=>rtRaw('phx_join',{config:{broadcast:{self:false}}},'1');
+    rt.onmessage=ev=>{try{
+      const m=JSON.parse(ev.data);
+      if(m.event==='phx_reply'&&m.ref==='1')rtReady=true;
+      else if(m.event==='broadcast'&&m.payload&&m.payload.event==='order')onOrder(m.payload.payload);
+    }catch(e){}};
+    rt.onclose=()=>{rt=null;rtReady=false;setTimeout(()=>rtConnect(onOrder),4000)};
+    rt.onerror=()=>{try{rt.close()}catch(e){}};
+  }
   const $=(id)=>document.getElementById(id);
   const clone=(o)=>JSON.parse(JSON.stringify(o));
   const esc=(s)=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -594,6 +611,17 @@
   function show(id){$(id).hidden=false}
   function hide(id){$(id).hidden=true}
   function showApp(){['appShell','cartBar','edgeHistory','edgeSettings'].forEach(show)}
+  function rtOnOrder(o){
+    if(!authed||!o||!o.uid)return;
+    const uid=String(o.uid);
+    if(state.deleted.includes(uid)||state.orders.some(x=>String(x.uid)===uid))return;
+    const c=clone(o);ensureUid(c);
+    c.uid=uid;
+    state.orders.unshift(c);
+    state.seq=Math.max(state.seq||1,num(c.id)+1);
+    save();renderHistory();renderMenu();
+    toast('New order #'+String(c.id).padStart(3,'0'));
+  }
   function hideApp(){['appShell','cartBar','edgeHistory','edgeSettings'].forEach(hide)}
   function anyOverlayOpen(){
     return ['loginOverlay','addOverlay','cartOverlay','doneOverlay','historyOverlay','settingsOverlay'].some(id=>!$(id).hidden);
@@ -679,7 +707,8 @@
     syncTimer=setTimeout(doSync,400);
   }
   async function doSync(){
-    if(!syncToken||syncBusy)return;
+    if(!syncToken)return;
+    if(syncBusy){syncTimer=setTimeout(doSync,500);return}
     syncBusy=true;setSyncStatus('Syncing…');
     try{
       const cur=await fetch(syncUrl(),{headers:syncHeaders()});
@@ -1147,6 +1176,7 @@
       $('loginPassword').value='';
       hide('loginOverlay');
       showApp();
+      rtConnect(rtOnOrder);
       if(syncToken)pullSync(false);
     }else{
       $('loginError').hidden=false;
@@ -1384,6 +1414,7 @@
   if(authed){
     hide('loginOverlay');
     showApp();
+    rtConnect(rtOnOrder);
     if(syncToken)pullSync(false);
   }else{
     hideApp();

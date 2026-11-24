@@ -349,6 +349,28 @@
   var TOKEN_KEY='qookie.sync.token', REPO_KEY='qookie.sync.repo';
   var MY_KEY='qookie.menu.orders', LAST_KEY='qookie.menu.last';
   var API='https://api.github.com/repos/', SIZE_EXTRA=10, POLL_MS=5000;
+  var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnZ2Fzd2Jqc215dmZoZW9mbm5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE2MzU5MDgsImV4cCI6MjEwNzIxMTkwOH0.5iV_nWSia3LaKSjTqoQtb8e3ZcAvJd8K3Vhg8b9Dwx4';
+  var SB_WS='wss://vggaswbjsmyvfheofnnj.supabase.co/realtime/v1/websocket?apikey='+encodeURIComponent(SB_KEY)+'&vsn=1.0.0';
+  var SB_TOPIC='realtime:qookie-orders';
+  var rt=null,rtReady=false;
+  function rtRaw(event,payload,ref){try{rt.send(JSON.stringify({topic:SB_TOPIC,event:event,payload:payload,ref:ref,join_ref:'1'}))}catch(e){}}
+  function rtConnect(onOrder){
+    if(rt)return;
+    try{rt=new WebSocket(SB_WS)}catch(e){return}
+    rt.onopen=function(){rtRaw('phx_join',{config:{broadcast:{self:false}}},'1')};
+    rt.onmessage=function(ev){try{
+      var m=JSON.parse(ev.data);
+      if(m.event==='phx_reply'&&m.ref==='1')rtReady=true;
+      else if(m.event==='broadcast'&&m.payload&&m.payload.event==='order'&&onOrder)onOrder(m.payload.payload);
+    }catch(e){}};
+    rt.onclose=function(){rt=null;rtReady=false;setTimeout(function(){rtConnect(onOrder)},4000)};
+    rt.onerror=function(){try{rt.close()}catch(e){}};
+  }
+  function rtSend(order){
+    if(!rtReady)return Promise.reject(new Error('Counter is offline. Try again.'));
+    rtRaw('broadcast',{event:'order',payload:order},'b'+Date.now());
+    return Promise.resolve(order);
+  }
 
   var FALLBACK_PRODUCTS=[
     {id:'c-americano',name:'Americano',cat:'coffee',price:40},
@@ -629,10 +651,8 @@
       }).join('');
     }
     $('cartFootTotal').textContent=money(cartTotal());
-    var browseOnly=!token;
-    $('sendBtn').textContent=browseOnly?'Order at the counter':'Send order';
-    $('sendBtn').disabled=cart.length===0||sending||browseOnly;
-    if(browseOnly&&cart.length){$('sendErr').textContent='This menu is for browsing. Please order at the counter.';$('sendErr').hidden=false}
+    $('sendBtn').textContent='Send order';
+    $('sendBtn').disabled=cart.length===0||sending;
   }
   $('reviewBtn').addEventListener('click',function(){renderCartSheet();$('sendErr').hidden=true;$('cartSheet').hidden=false});
   $('closeCart').addEventListener('click',function(){$('cartSheet').hidden=true});
@@ -646,6 +666,17 @@
   });
 
   function sendOrder(uid,items,total,customer){
+    if(!token){
+      return apiGet().then(function(r){
+        if(!r.ok)throw new Error(friendlyError(r));
+        var payload=r.payload||{},remoteOrders=extractOrders(payload),id=1;
+        remoteOrders.forEach(function(o){if(isFinite(+o.id)&&+o.id>=id)id=+o.id+1});
+        var ts=new Date().toISOString();
+        var order={id:id,uid:uid,items:items,total:num(total),profit:num(total),ts:ts,status:'pending',statusAt:ts,customer:customer,source:'menu'};
+        knownOrders=mergeOrders(knownOrders.concat([order]),remoteOrders,extractDeleted(payload));
+        return rtSend(order);
+      });
+    }
     function run(n){
       if(n>4)return Promise.reject(new Error('Two updates hit the cloud at once. Send the order again.'));
       return apiGet().then(function(r){
@@ -774,6 +805,7 @@
   $('navAccount').addEventListener('click',function(){showView('setup')});
 
   function boot(){
+    rtConnect();
     showView('loading');
     loadMenu().then(function(ok){
       if(!ok)return;
