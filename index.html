@@ -544,6 +544,29 @@
   const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnZ2Fzd2Jqc215dmZoZW9mbm5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE2MzU5MDgsImV4cCI6MjEwNzIxMTkwOH0.5iV_nWSia3LaKSjTqoQtb8e3ZcAvJd8K3Vhg8b9Dwx4';
   const SB_WS='wss://vggaswbjsmyvfheofnnj.supabase.co/realtime/v1/websocket?apikey='+encodeURIComponent(SB_KEY)+'&vsn=1.0.0';
   const SB_TOPIC='realtime:qookie-orders';
+  const SB_QKU='b74f06cf-0b89-4af2-9b5a-bc9d62d0bd53',SB_QREF='m4kydkh7qwbe';
+  let sbAt='',sbAtExp=0;
+  async function sbToken(){
+    if(sbAt&&Date.now()<sbAtExp)return sbAt;
+    const r=await fetch('https://vggaswbjsmyvfheofnnj.supabase.co/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:SB_QREF})});
+    if(!r.ok)throw new Error('Queue offline');
+    const j=await r.json();
+    sbAt=j.access_token;sbAtExp=Date.now()+(j.expires_in-60)*1000;
+    return sbAt;
+  }
+  async function sbQueue(){
+    const at=await sbToken();
+    const r=await fetch('https://vggaswbjsmyvfheofnnj.supabase.co/rest/v1/bloom_data?select=doc,rev&user_id=eq.'+SB_QKU,{headers:{apikey:SB_KEY,Authorization:'Bearer '+at}});
+    if(!r.ok)throw new Error('Queue read failed');
+    const a=await r.json(),row=a[0]||{doc:{orders:[]},rev:0};
+    return {orders:Array.isArray(row.doc&&row.doc.orders)?row.doc.orders:[],rev:Number(row.rev)||0};
+  }
+  async function sbClear(rev){
+    const at=await sbToken();
+    const r=await fetch('https://vggaswbjsmyvfheofnnj.supabase.co/rest/v1/bloom_data?user_id=eq.'+SB_QKU+'&rev=eq.'+rev,{method:'PATCH',headers:{apikey:SB_KEY,Authorization:'Bearer '+at,'Content-Type':'application/json',Prefer:'return=representation'},body:JSON.stringify({doc:{orders:[]},rev:rev+1})});
+    if(!r.ok)throw new Error('Queue clear failed');
+    return (await r.json()).length>0;
+  }
   let rt=null,rtReady=false;
   function rtRaw(event,payload,ref){try{rt.send(JSON.stringify({topic:SB_TOPIC,event:event,payload:payload,ref:ref,join_ref:'1'}))}catch(e){}}
   function rtConnect(onOrder){
@@ -616,6 +639,19 @@
   function show(id){$(id).hidden=false}
   function hide(id){$(id).hidden=true}
   function showApp(){['appShell','cartBar','edgeHistory','edgeSettings'].forEach(show)}
+  let queueBusy=false;
+  async function pollQueuedOrders(){
+    if(!authed||queueBusy)return;
+    queueBusy=true;
+    try{
+      const q=await sbQueue();
+      if(q.orders.length){
+        q.orders.forEach(o=>{try{rtOnOrder(o)}catch(e){}});
+        await sbClear(q.rev);
+      }
+    }catch(e){}
+    finally{queueBusy=false}
+  }
   function rtOnOrder(o){
     if(!authed||!o||!o.uid)return;
     const uid=String(o.uid);
@@ -1182,6 +1218,7 @@
       hide('loginOverlay');
       showApp();
       rtConnect(rtOnOrder);
+      pollQueuedOrders();
       if(syncToken)pullSync(false);
     }else{
       $('loginError').hidden=false;
@@ -1420,6 +1457,7 @@
     hide('loginOverlay');
     showApp();
     rtConnect(rtOnOrder);
+    pollQueuedOrders();
     if(syncToken)pullSync(false);
   }else{
     hideApp();
@@ -1427,6 +1465,7 @@
     setSyncStatus('Sign in to sync');
   }
   setInterval(()=>{if(authed&&syncToken&&!syncBusy)pullSync(false)},5000);
+  setInterval(pollQueuedOrders,3000);
   document.addEventListener('visibilitychange',()=>{
     if(!document.hidden&&authed&&syncToken)pullSync(false);
   });

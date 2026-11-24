@@ -337,13 +337,46 @@
   var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnZ2Fzd2Jqc215dmZoZW9mbm5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE2MzU5MDgsImV4cCI6MjEwNzIxMTkwOH0.5iV_nWSia3LaKSjTqoQtb8e3ZcAvJd8K3Vhg8b9Dwx4';
   var SB_WS='wss://vggaswbjsmyvfheofnnj.supabase.co/realtime/v1/websocket?apikey='+encodeURIComponent(SB_KEY)+'&vsn=1.0.0';
   var SB_TOPIC='realtime:qookie-orders';
+  var SB_QKU='b74f06cf-0b89-4af2-9b5a-bc9d62d0bd53',SB_QREF='m4kydkh7qwbe';
+  var sbAt='',sbAtExp=0;
+  function sbToken(){
+    if(sbAt&&Date.now()<sbAtExp)return Promise.resolve(sbAt);
+    return fetch('https://vggaswbjsmyvfheofnnj.supabase.co/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{'apikey':SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:SB_QREF})}).then(function(r){
+      if(!r.ok)throw new Error('Queue offline');
+      return r.json();
+    }).then(function(j){sbAt=j.access_token;sbAtExp=Date.now()+(j.expires_in-60)*1000;return sbAt});
+  }
+  function sbRow(at){
+    return fetch('https://vggaswbjsmyvfheofnnj.supabase.co/rest/v1/bloom_data?select=doc,rev&user_id=eq.'+SB_QKU,{headers:{apikey:SB_KEY,Authorization:'Bearer '+at}}).then(function(r){
+      if(!r.ok)throw new Error('Queue read failed');
+      return r.json();
+    }).then(function(a){return a[0]||{doc:{orders:[]},rev:0}});
+  }
+  function sbPut(at,doc,rev){
+    return fetch('https://vggaswbjsmyvfheofnnj.supabase.co/rest/v1/bloom_data?user_id=eq.'+SB_QKU+'&rev=eq.'+rev,{method:'PATCH',headers:{apikey:SB_KEY,Authorization:'Bearer '+at,'Content-Type':'application/json',Prefer:'return=representation'},body:JSON.stringify({doc:doc,rev:rev+1})}).then(function(r){
+      if(!r.ok)throw new Error('Queue write failed');
+      return r.json();
+    }).then(function(a){return a.length>0});
+  }
+  function sbAppend(order,n){
+    n=n||0;if(n>4)return Promise.reject(new Error('Queue busy'));
+    return sbToken().then(function(at){return sbRow(at).then(function(row){
+      var orders=(row.doc&&row.doc.orders)||[];
+      if(!Array.isArray(orders))orders=[];
+      if(orders.some(function(o){return o.uid===order.uid}))return true;
+      orders.push(order);
+      return sbPut(at,{orders:orders},Number(row.rev)||0).then(function(ok){return ok?true:sbAppend(order,n+1)});
+    })});
+  }
   var rt=null,rtReady=false,pending=[];
   function loadPending(){try{pending=JSON.parse(getLs(PENDING_KEY)||'[]');if(!Array.isArray(pending))pending=[]}catch(e){pending=[]}}
   function savePending(){setLs(PENDING_KEY,JSON.stringify(pending))}
   function flushPending(){
     if(!rtReady||!pending.length)return;
     var list=pending.slice();pending=[];savePending();
-    list.forEach(function(o){rtRaw('broadcast',{event:'order',payload:o},'b'+Date.now()+Math.random())});
+    list.forEach(function(o){
+      sbAppend(o).catch(function(){}).then(function(){rtRaw('broadcast',{event:'order',payload:o},'b'+Date.now()+Math.random())});
+    });
     toast(list.length+' queued order'+(list.length===1?'':'s')+' sent');
   }
   function rtRaw(event,payload,ref){try{rt.send(JSON.stringify({topic:SB_TOPIC,event:event,payload:payload,ref:ref,join_ref:'1'}))}catch(e){}}
@@ -644,7 +677,7 @@
       var ts=new Date().toISOString();
       var order={id:id,uid:uid,items:items,total:num(total),profit:num(total),ts:ts,status:'pending',statusAt:ts,customer:customer,source:'menu'};
         knownOrders=mergeOrders(knownOrders.concat([order]),remoteOrders,extractDeleted(payload));
-        return rtSend(order).catch(function(){pending.push(order);savePending();return order});
+        return sbAppend(order).catch(function(){}).then(function(){return rtSend(order)}).catch(function(){pending.push(order);savePending();return order});
       });
   }
 
