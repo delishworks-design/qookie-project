@@ -394,7 +394,7 @@
   function syncUrl(){return API+repoName()+'/contents/data.json'}
   function syncHeaders(){return {Authorization:'Bearer '+token,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'}}
 
-  var products=[],activeCat='all',searchTerm='',cart=[];
+  var products=[],photos=[],activeCat='all',searchTerm='',cart=[];
   var detailId=null,detailSize=12,detailQty=1;
   var myUids=[],knownOrders=[],statusMap={},currentOrder=null;
   var pollBusy=false,sending=false,pollingStarted=false,toastTimer=null;
@@ -429,7 +429,7 @@
     if(sha)body.sha=sha;
     return fetch(syncUrl(),{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},syncHeaders()),body:JSON.stringify(body)});
   }
-  function normalizeProduct(p){return {id:String(p.id||p.name||''),name:String(p.name||''),cat:p.cat==='coffee'?'coffee':'cookie',price:num(p.price)}}
+  function normalizeProduct(p){return {id:String(p.id||p.name||''),name:String(p.name||''),cat:p.cat==='coffee'?'coffee':'cookie',price:num(p.price),photo:p.photo?String(p.photo):undefined}}
   function extractOrders(payload){
     var st=(payload&&payload.state)||{};
     if(Array.isArray(payload&&payload.orders))return payload.orders;
@@ -468,6 +468,8 @@
       if(r.payload){
         var arr=extractProducts(r.payload);
         products=arr?arr.map(normalizeProduct):FALLBACK_PRODUCTS.map(clone);
+        var src=(r.payload.state&&r.payload.state.photos)||r.payload.photos;
+        photos=Array.isArray(src)?src.filter(function(x){return x&&x.id&&typeof x.data==='string'&&x.data.indexOf('data:image/')===0}):[];
         var ro=extractOrders(r.payload);
         knownOrders=ro;
         ro.forEach(function(o){
@@ -487,6 +489,9 @@
   }
 
   function heroFor(p){
+    var uploaded=null;
+    photos.forEach(function(x){if(x.id===p.photo)uploaded=x});
+    if(uploaded)return uploaded.data;
     var id=String(p.id||''),name=String(p.name||'').toLowerCase();
     if(p.cat==='coffee'){
       if(name.indexOf('americano')>-1)return 'assets/photos/coffee-iced.jpg';
