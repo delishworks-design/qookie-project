@@ -629,7 +629,10 @@
       }).join('');
     }
     $('cartFootTotal').textContent=money(cartTotal());
-    $('sendBtn').disabled=cart.length===0||sending;
+    var browseOnly=!token;
+    $('sendBtn').textContent=browseOnly?'Order at the counter':'Send order';
+    $('sendBtn').disabled=cart.length===0||sending||browseOnly;
+    if(browseOnly&&cart.length){$('sendErr').textContent='This menu is for browsing. Please order at the counter.';$('sendErr').hidden=false}
   }
   $('reviewBtn').addEventListener('click',function(){renderCartSheet();$('sendErr').hidden=true;$('cartSheet').hidden=false});
   $('closeCart').addEventListener('click',function(){$('cartSheet').hidden=true});
