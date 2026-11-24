@@ -278,6 +278,7 @@
     <div class="actions">
       <button id="refreshBtn" class="btn primary" type="button">Check status</button>
       <button id="againBtn" class="btn" type="button">Order again</button>
+      <button id="alertsBtn" class="btn" type="button">Turn on alerts</button>
     </div>
   </section>
 </div>
@@ -695,7 +696,7 @@
       cart=[];renderCartBar();
       $('cartSheet').hidden=true;$('custName').value='';
       showView('ticket');
-      toast(pending.indexOf(order)!==-1?'Order saved — will send when the counter is online':'Order #'+pad(order.id)+' sent');
+      toast(pending.indexOf(order)!==-1?'Order saved — will send when the counter is online':'Order '+pad(order.id)+' sent');
     }).catch(function(e){
       $('sendErr').textContent=e.message||'The order didn\'t go through. Try again.';
       $('sendErr').hidden=false;
@@ -711,7 +712,7 @@
     $('tStatus').classList.toggle('is-ready',done);
     $('readyStamp').hidden=!done;
     $('readyBanner').hidden=!done;
-    $('readyLine').textContent='Order #'+pad(o.id)+' — ready at the counter for '+(o.customer||'Guest')+'.';
+    $('readyLine').textContent='Order '+pad(o.id)+' — ready at the counter for '+(o.customer||'Guest')+'.';
     $('tLines').innerHTML=(o.items||[]).map(function(it){
       var unit=it.unit!=null?it.unit:(num(it.price)+(it.size===16?SIZE_EXTRA:0));
       return '<div class="t-line"><span>'+Number(it.qty)+'× '+esc(it.name)+(it.size?' · '+it.size+' oz':'')+'</span><span>'+money(unit*it.qty)+'</span></div>';
@@ -719,12 +720,39 @@
     $('tTotal').textContent=money(o.total);
     $('tTime').textContent=new Date(o.ts).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
   }
-  function onReady(order){
+  async   function enableAlerts(){
+    if(!('Notification' in window)){toast('Alerts are not supported on this device');return}
     try{
-      if('Notification' in window&&Notification.permission==='granted'){
-        new Notification('Your order is ready',{body:'Order #'+pad(order.id)+' — The Qookie Project'});
-      }
-    }catch(e){}
+      Notification.requestPermission().then(function(p){
+        toast(p==='granted'?'Alerts on — we will notify you when it is ready':'Alerts off — check your order status here');
+      }).catch(function(){toast('Could not turn on alerts')});
+    }catch(e){toast('Could not turn on alerts')}
+  }
+  $('alertsBtn').addEventListener('click',enableAlerts);
+  async function onReady(order){
+    var msg='Order '+pad(order.id)+' is ready at the counter';
+    toast(msg);
+    try{if(navigator.vibrate)navigator.vibrate([120,60,120])}catch(e){}
+    if('Notification' in window){
+      try{
+        if(Notification.permission==='granted'){
+          var shown=false;
+          if('serviceWorker' in navigator){
+            try{
+              var reg=await Promise.race([
+                navigator.serviceWorker.getRegistration('./'),
+                new Promise(function(r){setTimeout(function(){r(null)},1500)})
+              ]);
+              if(reg&&reg.showNotification){
+                await reg.showNotification('Your order is ready',{body:msg,tag:'qookie-'+order.uid});
+                shown=true;
+              }
+            }catch(e){}
+          }
+          if(!shown)new Notification('Your order is ready',{body:msg,tag:'qookie-'+order.uid});
+        }
+      }catch(e){}
+    }
     if(!$('ticket').hidden)renderTicket();
   }
   function poll(){
@@ -768,7 +796,7 @@
 
   $('refreshBtn').addEventListener('click',function(){
     $('refreshBtn').disabled=true;
-    poll().then(function(){toast('Status checked')}).then(function(){$('refreshBtn').disabled=false});
+    poll().then(function(){$('refreshBtn').disabled=false});
   });
   $('againBtn').addEventListener('click',function(){
     currentOrder=null;statusMap={};saveMy();
@@ -780,6 +808,7 @@
   $('navOrders').addEventListener('click',function(){showView('ticket');poll()});
 
   function boot(){
+    if('serviceWorker' in navigator){try{navigator.serviceWorker.register('sw.js',{scope:'./'}).catch(function(){})}catch(e){}}
     rtConnect();
     showView('loading');
     loadMenu().then(function(ok){
