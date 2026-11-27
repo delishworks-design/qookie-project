@@ -213,7 +213,7 @@
 </style>
 <script>
 (function(){
-  var BUILD='v2026-11-27-1215';window.__BUILD=BUILD;
+  var BUILD='v2026-11-27-1225';window.__BUILD=BUILD;
   function stamp(){var el=document.getElementById('buildTag');if(el)el.textContent=BUILD}
   function check(){
     fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
@@ -298,6 +298,7 @@
       <button id="alertsBtn" class="btn" type="button">Turn on alerts</button>
       <button id="testAlertBtn" class="btn" type="button">Test alert</button>
       <p class="note" id="alertState" style="text-align:center;margin-top:4px">—</p>
+      <button id="diagBtn" class="btn" type="button" style="font-size:11px;opacity:.7">Copy diagnostics</button>
     </div>
   </section>
 </div>
@@ -480,6 +481,8 @@
   function loadMy(){
     try{var a=JSON.parse(getLs(MY_KEY)||'[]');myUids=Array.isArray(a)?a.map(String):[]}catch(e){myUids=[]}
     try{currentOrder=JSON.parse(getLs(LAST_KEY)||'null')}catch(e){currentOrder=null}
+    try{var qo=new URLSearchParams(location.search).get('o');if(qo&&myUids.indexOf(qo)===-1)myUids.push(qo)}catch(e){}
+    if(currentOrder&&currentOrder.uid&&myUids.indexOf(String(currentOrder.uid))===-1)myUids.push(String(currentOrder.uid));
   }
   function saveMy(){setLs(MY_KEY,JSON.stringify(myUids));setLs(LAST_KEY,JSON.stringify(currentOrder||null))}
   function onStatusEvent(p){
@@ -740,7 +743,7 @@
     var total=cartTotal(),customer=($('custName').value||'').trim()||'Guest',uid=newUid();
     sendOrder(uid,items,total,customer).then(function(order){
       if(myUids.indexOf(uid)===-1)myUids.push(uid);
-      currentOrder=order;statusMap[uid]='pending';saveMy();
+      currentOrder=order;statusMap[uid]='pending';saveMy();try{var uu=new URL(location.href);uu.searchParams.set('o',uid);history.replaceState(null,'',uu)}catch(e){}
       cart=[];renderCartBar();
       $('cartSheet').hidden=true;$('custName').value='';
       showView('ticket');
@@ -784,6 +787,12 @@
     }).catch(function(){toast('Could not turn on alerts')});
   }
   $('alertsBtn').addEventListener('click',function(){enableAlerts().then(renderAlertState)});
+  $('diagBtn').addEventListener('click',function(){
+    var d={build:window.__BUILD||'',href:location.href,perm:('Notification' in window)?Notification.permission:'none',myUids:myUids,currentOrder:currentOrder?{id:currentOrder.id,uid:currentOrder.uid,status:currentOrder.status,statusAt:currentOrder.statusAt}:null,known:knownOrders.filter(function(o){return myUids.indexOf(String(o.uid))!==-1}).map(function(o){return {id:o.id,uid:o.uid,status:o.status,statusAt:o.statusAt}}),lastPoll:lastPollInfo,lastSb:lastSbInfo,ack:readyAck,ticketHidden:$('ticket').hidden};
+    var t=JSON.stringify(d);
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){toast('Diagnostics copied')}).catch(function(){toast('Copy failed')})}
+    else{try{var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();toast('Diagnostics copied')}catch(e){toast('Copy failed')}}
+  });
   $('testAlertBtn').addEventListener('click',function(){
     var run=function(){onReady({id:0,uid:'',customer:''},'Test alert — this is how READY looks');renderAlertState()};
     if('Notification' in window&&Notification.permission==='default'){
@@ -838,6 +847,7 @@
     if(pollBusy)return Promise.resolve();
     pollBusy=true;
     return apiGet().then(function(r){
+      lastPollInfo={at:Date.now(),ok:!!r.ok,status:r.status||null,error:r.error||''};
       if(!r.ok||!r.payload)return;
       var ro=extractOrders(r.payload);
       knownOrders=ro;
@@ -863,11 +873,12 @@
       });
     }).catch(function(){}).then(function(){pollBusy=false});
   }
-  var statusBusy=false;
+  var statusBusy=false,lastPollInfo={at:0,ok:null,status:null,error:''},lastSbInfo={at:0,ok:null,error:''};
   function pollStatuses(){
     if(statusBusy||!myUids.length)return Promise.resolve();
     statusBusy=true;
     return sbStatuses().then(function(st){
+      lastSbInfo={at:Date.now(),ok:true,error:''};
       Object.keys(st||{}).forEach(function(uid){
         if(myUids.indexOf(uid)===-1)return;
         var s=st[uid];
@@ -882,7 +893,7 @@
         }
         onReady(o);
       });
-    }).catch(function(){}).then(function(){statusBusy=false});
+    }).catch(function(e){lastSbInfo={at:Date.now(),ok:false,error:String(e&&e.message||e)}}).then(function(){statusBusy=false});
   }
   function startPolling(){
     if(pollingStarted)return;
