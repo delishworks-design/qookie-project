@@ -278,7 +278,7 @@
 </style>
 <script>
 (function(){
-  var BUILD='v2026-11-27-1225';window.__BUILD=BUILD;
+  var BUILD='v2026-11-27-1635';window.__BUILD=BUILD;
   function stamp(){var el=document.getElementById('buildTag');if(el)el.textContent=BUILD}
   function check(){
     fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
@@ -903,7 +903,7 @@
       <div class="r-row">
         <div class="r-info">
           <strong>${esc(it.name)}</strong>
-          <small>${money(it.price)}${it.size?' · '+it.size+' oz'+(it.size===16?' +'+money(SIZE_EXTRA):''):''}</small>
+          <small>${money(it.price)}${it.variant?' · '+it.variant:(it.size?' · '+it.size+' oz'+(it.size===16?' +'+money(SIZE_EXTRA):''):'')}</small>
         </div>
         <div class="stepper">
           <button type="button" data-act="dec" data-i="${i}" aria-label="Decrease ${esc(it.name)}">−</button>
@@ -969,10 +969,13 @@
     hide('cartOverlay');show('doneOverlay');
   }
 
+  const DRINK_CATS=['coffee','noncoffee','bestseller','frappe','refresher'];
+  const PASTRY_CATS=['cookie','cookies','cheesecake','cakes','cinnamon'];
   const itemCat=(i)=>{
-    if(i.cat==='coffee'||i.cat==='cookie')return i.cat;
+    if(DRINK_CATS.indexOf(i.cat)>-1)return 'coffee';
+    if(PASTRY_CATS.indexOf(i.cat)>-1)return 'cookie';
     const p=state.products.find(x=>x.name===i.name);
-    return p?p.cat:(i.size?'coffee':'cookie');
+    return p?p.cat:(i.variant?'coffee':(i.size?'coffee':'cookie'));
   };
   const soldTotal=(i)=>(i.unit!=null?i.unit:(i.price+(i.size===16?SIZE_EXTRA:0)))*i.qty;
 
@@ -1013,7 +1016,7 @@
     badge.textContent=pending.length;
     badge.hidden=pending.length===0;
     $('queueList').innerHTML=pending.length?pending.map(o=>{
-      const names=(o.items||[]).map(i=>i.qty+'× '+i.name+(i.size?' '+i.size+' oz':'')).join(', ');
+      const names=(o.items||[]).map(i=>i.qty+'× '+i.name+(i.variant?' '+i.variant:(i.size?' '+i.size+' oz':''))).join(', ');
       const when=new Date(o.ts).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
       return `<div class="queue-row" data-uid="${esc(o.uid)}">
         <div class="queue-head"><b>#${String(o.id).padStart(3,'0')}</b><strong>${money(o.total||0)}</strong></div>
@@ -1127,7 +1130,7 @@
     if(!shown.length){box.innerHTML='<p class="empty">No transactions here yet.</p>';return}
     box.innerHTML=shown.map(o=>{
       const pieces=(o.items||[]).reduce((s,i)=>s+i.qty,0);
-      const names=(o.items||[]).map(i=>(itemCat(i)==='coffee'?'Coffee':'Cookies')+' · '+i.qty+'× '+i.name+(i.size?' '+i.size+' oz':'')).join(' · ');
+      const names=(o.items||[]).map(i=>(itemCat(i)==='coffee'?'Coffee':'Cookies')+' · '+i.qty+'× '+i.name+(i.variant?' '+i.variant:(i.size?' '+i.size+' oz':''))).join(' · ');
       const when=new Date(o.ts).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
       return `<div class="tx-item">
         <div class="tx-head"><b>#${String(o.id).padStart(3,'0')}</b><strong>${money(o.total||0)}</strong></div>
