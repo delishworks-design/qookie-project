@@ -769,9 +769,10 @@
   }
   $('alertsBtn').addEventListener('click',function(){enableAlerts().then(renderAlertState)});
   $('testAlertBtn').addEventListener('click',function(){
-    if('Notification' in window&&Notification.permission==='default'){Notification.requestPermission().then(renderAlertState)}
-    onReady({id:0,uid:'',customer:''},'Test alert — this is how READY looks');
-    renderAlertState();
+    var run=function(){onReady({id:0,uid:'',customer:''},'Test alert — this is how READY looks');renderAlertState()};
+    if('Notification' in window&&Notification.permission==='default'){
+      Notification.requestPermission().then(function(){renderAlertState();run()}).catch(run);
+    }else run();
   });
   $('readyPopClose').addEventListener('click',function(){$('readyPop').hidden=true});
   $('readyPopView').addEventListener('click',function(){$('readyPop').hidden=true;showView('ticket');poll()});
@@ -802,8 +803,8 @@
           if('serviceWorker' in navigator){
             try{
               var reg=await Promise.race([
-                navigator.serviceWorker.getRegistration('./'),
-                new Promise(function(r){setTimeout(function(){r(null)},1500)})
+                navigator.serviceWorker.ready,
+                new Promise(function(r){setTimeout(function(){r(null)},2000)})
               ]);
               if(reg&&reg.showNotification){
                 await reg.showNotification('Your order is ready',{body:msg,tag:'qookie-'+order.uid});
@@ -811,7 +812,7 @@
               }
             }catch(e){}
           }
-          if(!shown)new Notification('Your order is ready',{body:msg,tag:'qookie-'+order.uid});
+          if(!shown){try{new Notification('Your order is ready',{body:msg,tag:'qookie-'+order.uid})}catch(e){}}
         }
       }catch(e){}
     }
