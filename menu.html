@@ -60,6 +60,7 @@
   .place{flex:1;min-width:0}
   .place b{display:block;font-family:Georgia,serif;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .place span{display:block;font-size:11px;color:var(--muted);letter-spacing:.08em;margin-top:2px;font-weight:700}
+  .table-badge{flex:none;background:var(--tan);color:var(--paper);border-radius:12px;padding:7px 10px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
   .bell{
     width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--paper);
     display:grid;place-items:center;color:var(--ink);flex:none;position:relative;
@@ -185,6 +186,7 @@
   .onboard img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:opacity .4s ease}
   .onboard img.swap{opacity:0}
   .onboard-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,12,7,.08) 30%,rgba(20,12,7,.78) 100%)}
+  .onboard-table{position:absolute;top:calc(22px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);background:rgba(255,253,249,.92);color:var(--brown);border-radius:16px;padding:9px 16px;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
   .onboard-title{position:absolute;left:0;right:0;bottom:12%;text-align:center;font-family:Georgia,serif;font-size:clamp(30px,9vw,44px);color:#fff;letter-spacing:-.02em;animation:onboardBlink 2.6s ease-in-out infinite}
   @keyframes onboardBlink{0%,100%{opacity:1}50%{opacity:.32}}
   .t-note{font-size:12px;color:var(--brown-3);font-weight:700;margin:0 0 12px;line-height:1.5}
@@ -232,7 +234,7 @@
 </style>
 <script>
 (function(){
-  var BUILD='v2026-11-28-0325';window.__BUILD=BUILD;
+  var BUILD='v2026-11-28-0745';window.__BUILD=BUILD;
   function stamp(){var el=document.getElementById('buildTag');if(el)el.textContent=BUILD}
   function check(){
     fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
@@ -264,6 +266,7 @@
     <header class="top">
       <div class="avatar" aria-hidden="true">Q</div>
       <div class="place"><b>The Qookie Project</b><span id="metaClock">ORDER HERE</span></div>
+      <span id="tableBadge" class="table-badge" hidden>Table 1</span>
       <button class="bell" id="bellBtn" type="button" aria-label="My orders">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
         <i></i>
@@ -356,7 +359,7 @@
       <div class="mode-opts" id="modeOpts">
         <button class="mode-opt" type="button" data-mode="Dine in">
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10"/><path d="M16 3c-1.5 2-2 4-2 6v2h4V9c0-2-.5-4-2-6zM16 11v10"/></svg>
-          <span>Dine in</span>
+          <span id="dineLabel">Dine in</span>
         </button>
         <button class="mode-opt" type="button" data-mode="Take out">
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1 13H7L6 8z"/><path d="M9 8a3 3 0 0 1 6 0"/></svg>
@@ -399,6 +402,7 @@
 <div id="onboard" class="onboard" hidden>
   <img id="onboardImg" src="assets/photos/coffee-latte.jpg" alt="">
   <div class="onboard-shade"></div>
+  <span id="onboardTable" class="onboard-table" hidden>Table 1</span>
   <b class="onboard-title">Tap to order</b>
 </div>
 <div id="toast" role="status" hidden></div>
@@ -549,6 +553,14 @@
   function rawUrl(){return 'https://raw.githubusercontent.com/'+repoName()+'/main/data.json?t='+Date.now()}
 
   var products=[],photos=[],activeCat='all',searchTerm='',cart=[],checkoutStep=1,orderMode=null;
+  var tableNo='';
+  try{var tq=parseInt(new URLSearchParams(location.search).get('table'),10);if(tq>=1&&tq<=5)tableNo=String(tq)}catch(e){}
+  function applyTable(){
+    if(!tableNo)return;
+    var b=$('tableBadge');if(b){b.textContent='Table '+tableNo;b.hidden=false}
+    var ot=$('onboardTable');if(ot){ot.textContent='Table '+tableNo;ot.hidden=false}
+    var dl=$('dineLabel');if(dl)dl.textContent='Dine in · Table '+tableNo;
+  }
   var detailId=null,detailVariant=null,detailQty=1;
   var myUids=[],knownOrders=[],statusMap={},currentOrder=null,readyAck=[];
   var pollBusy=false,sending=false,pollingStarted=false,toastTimer=null;
@@ -574,8 +586,8 @@
     var now=Date.now(),a=[];
     try{a=JSON.parse(getCookie('qookie_rl')||'[]')}catch(e){}
     a=a.filter(function(t){return now-t<3600000});
-    if(a.length&&now-a[a.length-1]<60000)return 'Please wait a minute before ordering again.';
-    if(a.length>=5)return 'Too many orders from this device. Please ask the counter.';
+    if(a.length&&now-a[a.length-1]<30000)return 'Please wait a few seconds before ordering again.';
+    if(a.length>=10)return 'Too many orders from this device. Please ask the counter.';
     return '';
   }
   function markRate(){
@@ -848,7 +860,7 @@
     if(n===4)renderModes();
   }
   function openCheckout(){
-    checkoutStep=1;orderMode=null;$('sendErr2').hidden=true;
+    checkoutStep=1;orderMode=tableNo?'Dine in':null;$('sendErr2').hidden=true;
     renderCartSheet();showCheckoutStep(1);$('cartSheet').hidden=false;
   }
   $('reviewBtn').addEventListener('click',openCheckout);
@@ -877,13 +889,13 @@
     renderCartSheet();renderCartBar();
   });
 
-  function sendOrder(uid,items,total,customer,mode,notes){
+  function sendOrder(uid,items,total,customer,mode,notes,table){
     return apiGet().then(function(r){
       if(!r.ok)throw new Error(friendlyError(r));
       var payload=r.payload||{},remoteOrders=extractOrders(payload),id=1;
       remoteOrders.forEach(function(o){if(isFinite(+o.id)&&+o.id>=id)id=+o.id+1});
       var ts=new Date().toISOString();
-      var order={id:id,uid:uid,items:items,total:num(total),profit:num(total),ts:ts,status:'pending',statusAt:ts,customer:customer,mode:mode||null,notes:notes||null,source:'menu'};
+      var order={id:id,uid:uid,items:items,total:num(total),profit:num(total),ts:ts,status:'pending',statusAt:ts,customer:customer,mode:mode||null,notes:notes||null,table:table||null,source:'menu'};
         knownOrders=mergeOrders(knownOrders.concat([order]),remoteOrders,extractDeleted(payload));
         return sbAppend(order).catch(function(){}).then(function(){return rtSend(order)}).catch(function(){pending.push(order);savePending();return order});
       });
@@ -899,7 +911,7 @@
     sending=true;$('placeBtn').disabled=true;$('sendErr2').hidden=true;
     var items=cart.map(function(it){return {name:it.name,cat:it.cat,price:it.price,unit:lineUnit(it),variant:it.variant||null,size:null,qty:it.qty}});
     var total=cartTotal(),customer=($('custName').value||'').trim()||'Guest',notes=($('custNotes').value||'').trim().slice(0,140),uid=newUid();
-    sendOrder(uid,items,total,customer,orderMode,notes).then(function(order){
+    sendOrder(uid,items,total,customer,orderMode,notes,orderMode==='Dine in'?tableNo:'').then(function(order){
       if(myUids.indexOf(uid)===-1)myUids.push(uid);
       currentOrder=order;statusMap[uid]='pending';saveMy();markRate();
       cart=[];renderCartBar();
@@ -917,7 +929,7 @@
     var o=currentOrder;if(!o)return;
     var done=o.status==='done';
     $('tNum').textContent=pad(o.id);
-    $('tWho').textContent='For '+(o.customer||'Guest')+(o.mode?' · '+o.mode:'');
+    $('tWho').textContent='For '+(o.customer||'Guest')+(o.mode?' · '+o.mode:'')+(o.table?' · Table '+o.table:'');
     $('tStatus').textContent=done?'READY':'IN THE QUEUE';
     $('tStatus').classList.toggle('is-ready',done);
     $('readyStamp').hidden=!done;
@@ -1113,6 +1125,7 @@
   loadMy();
   loadReady();
   loadPending();
+  applyTable();
   boot();
 })();
 </script>

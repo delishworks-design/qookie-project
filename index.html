@@ -280,7 +280,7 @@
 </style>
 <script>
 (function(){
-  var BUILD='v2026-11-28-0325';window.__BUILD=BUILD;
+  var BUILD='v2026-11-28-0745';window.__BUILD=BUILD;
   function stamp(){var el=document.getElementById('buildTag');if(el)el.textContent=BUILD}
   function check(){
     fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
@@ -1035,7 +1035,7 @@
       const when=new Date(o.ts).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
       return `<div class="queue-row" data-uid="${esc(o.uid)}">
         <div class="queue-head"><b>#${String(o.id).padStart(3,'0')}</b><strong>${money(o.total||0)}</strong></div>
-        <div class="queue-meta">${esc(o.customer||'Guest')}${o.mode?' · '+esc(o.mode):''} · ${esc(when)}</div>
+        <div class="queue-meta">${esc(o.customer||'Guest')}${o.mode?' · '+esc(o.mode):''}${o.table?' · Table '+esc(o.table):''} · ${esc(when)}</div>
         <div class="queue-items">${esc(names)}</div>
         ${o.notes?`<div class="queue-notes">Note: ${esc(o.notes)}</div>`:''}
         <button class="wide" type="button" data-act="done">Mark done</button>
@@ -1150,7 +1150,7 @@
       const when=new Date(o.ts).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
       return `<div class="tx-item">
         <div class="tx-head"><b>#${String(o.id).padStart(3,'0')}</b><strong>${money(o.total||0)}</strong></div>
-        <div class="tx-meta">${esc(when)} · ${o.mode?esc(o.mode)+' · ':''}${pieces} pcs · profit ${money(o.total||0)}</div>
+        <div class="tx-meta">${esc(when)} · ${o.mode?esc(o.mode)+' · ':''}${o.table?'Table '+esc(o.table)+' · ':''}${pieces} pcs · profit ${money(o.total||0)}</div>
         <div class="tx-body">${esc(names)}</div>
         ${o.notes?`<div class="tx-note">Note: ${esc(o.notes)}</div>`:''}
       </div>`;
