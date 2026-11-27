@@ -283,6 +283,8 @@
       <button id="refreshBtn" class="btn primary" type="button">Check status</button>
       <button id="againBtn" class="btn" type="button">Order again</button>
       <button id="alertsBtn" class="btn" type="button">Turn on alerts</button>
+      <button id="testAlertBtn" class="btn" type="button">Test alert</button>
+      <p class="note" id="alertState" style="text-align:center;margin-top:4px">—</p>
     </div>
   </section>
 </div>
@@ -750,23 +752,34 @@
     $('tTotal').textContent=money(o.total);
     $('tTime').textContent=new Date(o.ts).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
   }
-  async   function enableAlerts(){
-    if(!('Notification' in window)){toast('Alerts are not supported on this device');return}
-    if(Notification.permission==='denied'){toast('Allow notifications for this site in your browser settings');return}
-    try{
-      Notification.requestPermission().then(function(p){
-        toast(p==='granted'?'Alerts on — we will notify you when it is ready':'Alerts off — check your order status here');
-      }).catch(function(){toast('Could not turn on alerts')});
-    }catch(e){toast('Could not turn on alerts')}
+  function renderAlertState(){
+    var el=$('alertState');if(!el)return;
+    if(!('Notification' in window)){el.textContent='Device alerts not supported — in-app popup still works';return}
+    var p=Notification.permission;
+    el.textContent=p==='granted'?'Device alerts: ON':(p==='denied'?'Device alerts: BLOCKED — allow notifications in browser settings':'Device alerts: off');
+    $('alertsBtn').hidden=(p==='granted');
   }
-  $('alertsBtn').addEventListener('click',enableAlerts);
+  function enableAlerts(){
+    if(!('Notification' in window)){toast('Alerts are not supported on this device');return Promise.resolve()}
+    if(Notification.permission==='denied'){toast('Allow notifications for this site in your browser settings');return Promise.resolve()}
+    return Notification.requestPermission().then(function(p){
+      toast(p==='granted'?'Alerts on — we will notify you when it is ready':'Alerts off — check your order status here');
+      return p;
+    }).catch(function(){toast('Could not turn on alerts')});
+  }
+  $('alertsBtn').addEventListener('click',function(){enableAlerts().then(renderAlertState)});
+  $('testAlertBtn').addEventListener('click',function(){
+    if('Notification' in window&&Notification.permission==='default'){Notification.requestPermission().then(renderAlertState)}
+    onReady({id:0,uid:'',customer:''},'Test alert — this is how READY looks');
+    renderAlertState();
+  });
   $('readyPopClose').addEventListener('click',function(){$('readyPop').hidden=true});
   $('readyPopView').addEventListener('click',function(){$('readyPop').hidden=true;showView('ticket');poll()});
-  async function onReady(order){
+  async function onReady(order,testMsg){
     var uid=String(order&&order.uid||'');
     if(uid&&readyAck.indexOf(uid)!==-1)return;
     if(uid){readyAck.push(uid);saveReady()}
-    var msg='Order '+pad(order.id)+' is ready at the counter';
+    var msg=testMsg||('Order '+pad(order.id)+' is ready at the counter');
     toast(msg);
     try{
       $('readyPopText').textContent=msg+' — pick it up at the counter.';
@@ -855,7 +868,7 @@
   $('navOrders').addEventListener('click',function(){showView('ticket');poll()});
 
   function boot(){
-    if('serviceWorker' in navigator){try{navigator.serviceWorker.register('sw.js',{scope:'./'}).catch(function(){})}catch(e){}}
+    if('serviceWorker' in navigator){try{navigator.serviceWorker.register('sw.js',{scope:'./',updateViaCache:'none'}).catch(function(){})}catch(e){}}
     rtConnect();
     showView('loading');
     loadMenu().then(function(ok){
@@ -864,6 +877,7 @@
       if(currentOrder&&myUids.indexOf(String(currentOrder.uid))!==-1)showView('ticket');
       else showView('menu');
       renderCartBar();
+      renderAlertState();
       poll();
     });
   }
