@@ -1309,6 +1309,7 @@
     order.status='done';
     order.statusAt=new Date().toISOString();
     save();
+    try{if(rtReady)rtRaw('broadcast',{event:'status',payload:{uid:uid,status:'done',statusAt:order.statusAt}},'s'+Date.now())}catch(e){}
     renderHistory();renderMenu();renderCart();
     toast('Order #'+String(order.id).padStart(3,'0')+' tapos na');
   });

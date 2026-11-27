@@ -343,8 +343,8 @@
 
   var REPO_DEFAULT='delishworks-design/qookie-project-data';
   var REPO_KEY='qookie.sync.repo';
-  var MY_KEY='qookie.menu.orders', LAST_KEY='qookie.menu.last', PENDING_KEY='qookie.menu.pending';
-  var SIZE_EXTRA=10, POLL_MS=5000;
+  var MY_KEY='qookie.menu.orders', LAST_KEY='qookie.menu.last', PENDING_KEY='qookie.menu.pending', READY_KEY='qookie.menu.ready';
+  var SIZE_EXTRA=10, POLL_MS=3000;
   var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnZ2Fzd2Jqc215dmZoZW9mbm5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE2MzU5MDgsImV4cCI6MjEwNzIxMTkwOH0.5iV_nWSia3LaKSjTqoQtb8e3ZcAvJd8K3Vhg8b9Dwx4';
   var SB_WS='wss://vggaswbjsmyvfheofnnj.supabase.co/realtime/v1/websocket?apikey='+encodeURIComponent(SB_KEY)+'&vsn=1.0.0';
   var SB_TOPIC='realtime:qookie-orders';
@@ -399,6 +399,7 @@
       var m=JSON.parse(ev.data);
       if(m.event==='phx_reply'&&m.ref==='1'){rtReady=true;flushPending()}
       else if(m.event==='broadcast'&&m.payload&&m.payload.event==='order'&&onOrder)onOrder(m.payload.payload);
+      else if(m.event==='broadcast'&&m.payload&&m.payload.event==='status')onStatusEvent(m.payload.payload);
     }catch(e){}};
     rt.onclose=function(){rt=null;rtReady=false;setTimeout(function(){rtConnect(onOrder)},4000)};
     rt.onerror=function(){try{rt.close()}catch(e){}};
@@ -451,14 +452,31 @@
 
   var products=[],photos=[],activeCat='all',searchTerm='',cart=[];
   var detailId=null,detailSize=12,detailQty=1;
-  var myUids=[],knownOrders=[],statusMap={},currentOrder=null;
+  var myUids=[],knownOrders=[],statusMap={},currentOrder=null,readyAck=[];
   var pollBusy=false,sending=false,pollingStarted=false,toastTimer=null;
 
+  function loadReady(){
+    try{var a=JSON.parse(getLs(READY_KEY)||'[]');readyAck=Array.isArray(a)?a.map(String):[]}catch(e){readyAck=[]}
+  }
+  function saveReady(){setLs(READY_KEY,JSON.stringify(readyAck.slice(-50)))}
   function loadMy(){
     try{var a=JSON.parse(getLs(MY_KEY)||'[]');myUids=Array.isArray(a)?a.map(String):[]}catch(e){myUids=[]}
     try{currentOrder=JSON.parse(getLs(LAST_KEY)||'null')}catch(e){currentOrder=null}
   }
   function saveMy(){setLs(MY_KEY,JSON.stringify(myUids));setLs(LAST_KEY,JSON.stringify(currentOrder||null))}
+  function onStatusEvent(p){
+    if(!p||!p.uid)return;
+    var uid=String(p.uid);
+    if(myUids.indexOf(uid)===-1)return;
+    var o=null;
+    if(currentOrder&&String(currentOrder.uid)===uid)o=currentOrder;
+    for(var i=0;i<knownOrders.length;i++){if(String(knownOrders[i].uid)===uid){o=knownOrders[i];break}}
+    if(!o)return;
+    if(p.status)o.status=p.status;
+    if(p.statusAt)o.statusAt=p.statusAt;
+    if(currentOrder&&String(currentOrder.uid)===uid){currentOrder=o;saveMy();if(!$('ticket').hidden)renderTicket()}
+    if(o.status==='done')onReady(o);
+  }
   function toast(msg){var t=$('toast');t.textContent=msg;t.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.hidden=true},2200)}
   function showView(name){
     ['loading','error','menu','ticket'].forEach(function(v){$(v).hidden=(v!==name)});
@@ -521,6 +539,8 @@
           var uid=String(o.uid||'');
           if(myUids.indexOf(uid)===-1)return;
           if(!Object.prototype.hasOwnProperty.call(statusMap,uid))statusMap[uid]=o.status||'pending';
+          var st=o.status||'pending';
+          if(st==='done'&&(!currentOrder||String(currentOrder.uid)!==uid)&&readyAck.indexOf(uid)===-1){readyAck.push(uid);saveReady()}
           if(currentOrder&&String(currentOrder.uid)===uid)currentOrder=o;
         });
         saveMy();
@@ -743,6 +763,9 @@
   $('readyPopClose').addEventListener('click',function(){$('readyPop').hidden=true});
   $('readyPopView').addEventListener('click',function(){$('readyPop').hidden=true;showView('ticket');poll()});
   async function onReady(order){
+    var uid=String(order&&order.uid||'');
+    if(uid&&readyAck.indexOf(uid)!==-1)return;
+    if(uid){readyAck.push(uid);saveReady()}
     var msg='Order '+pad(order.id)+' is ready at the counter';
     toast(msg);
     try{
@@ -801,10 +824,8 @@
         if(myUids.indexOf(uid)===-1)return;
         var status=o.status||'pending';
         if(!Object.prototype.hasOwnProperty.call(statusMap,uid))statusMap[uid]=status;
-        else if(statusMap[uid]!==status){
-          if(status==='done')onReady(o);
-          statusMap[uid]=status;
-        }
+        else statusMap[uid]=status;
+        if(status==='done')onReady(o);
         if(currentOrder&&String(currentOrder.uid)===uid){
           currentOrder=o;saveMy();
           if(!$('ticket').hidden)renderTicket();
@@ -851,6 +872,7 @@
   tickClock();setInterval(tickClock,30000);
 
   loadMy();
+  loadReady();
   loadPending();
   boot();
 })();
