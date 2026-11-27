@@ -171,18 +171,23 @@
   }
   .buy-row .btn.primary{flex:1}
   .group-h{font-family:Georgia,serif;font-size:18px;letter-spacing:-.02em;margin:10px 0 -4px;color:var(--brown)}
-  .upsell{border-top:1px dashed var(--line);margin-top:14px;padding-top:12px}
-  .upsell-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:8px}
-  .upsell-head b{font-family:Georgia,serif;font-size:15px}
-  .upsell-head span{font-size:10px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
-  .upsell-row{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
-  .upsell-row::-webkit-scrollbar{display:none}
-  .up-card{width:122px;flex:none;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--paper)}
-  .up-card img{width:100%;height:70px;object-fit:cover;display:block}
-  .up-body{padding:7px 8px 8px}
-  .up-name{font-size:11px;line-height:1.25;min-height:28px}
-  .up-price{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:700;margin-top:4px}
-  .up-add{width:24px;height:24px;border-radius:50%;border:0;background:var(--tan);color:var(--paper);font-size:16px;line-height:1;display:grid;place-items:center}
+  .step-dots{display:flex;gap:6px;margin:0 0 14px}
+  .step-dots i{height:4px;flex:1;border-radius:2px;background:var(--line)}
+  .step-dots i.on{background:var(--tan)}
+  .upsell-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .ug-card{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--paper)}
+  .ug-card img{width:100%;height:88px;object-fit:cover;display:block}
+  .ug-body{padding:8px}
+  .ug-name{font-size:12px;line-height:1.25;min-height:30px}
+  .ug-row{display:flex;justify-content:space-between;align-items:center;margin-top:4px;gap:8px}
+  .ug-price{font-size:12px;font-weight:700}
+  .ug-add{width:26px;height:26px;border-radius:50%;border:0;background:var(--tan);color:var(--paper);font-size:16px;line-height:1;display:grid;place-items:center;flex:none}
+  .ug-add.on{background:var(--ok);font-size:11px;width:auto;border-radius:13px;padding:0 9px}
+  .mode-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .mode-opt{border:1.5px solid var(--line);border-radius:16px;background:var(--paper);padding:18px 12px;display:grid;gap:8px;place-items:center;color:var(--muted);font-family:Georgia,serif;font-size:15px}
+  .mode-opt.on{border-color:var(--tan);background:#FBF1E4;color:var(--brown);box-shadow:0 0 0 2px rgba(201,142,82,.22) inset}
+  .step-actions{display:flex;gap:10px;margin-top:14px}
+  .step-actions .btn{flex:1}
   .ticket-top{display:flex;align-items:center;gap:12px;margin-bottom:18px}
   .ticket-top h2{font-family:Georgia,serif;font-size:20px;margin:0;flex:1}
   .stub{border:1px solid var(--line);border-radius:20px;background:var(--paper);padding:20px;position:relative;overflow:hidden;text-align:center}
@@ -226,7 +231,7 @@
 </style>
 <script>
 (function(){
-  var BUILD='v2026-11-27-1635';window.__BUILD=BUILD;
+  var BUILD='v2026-11-28-0225';window.__BUILD=BUILD;
   function stamp(){var el=document.getElementById('buildTag');if(el)el.textContent=BUILD}
   function check(){
     fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
@@ -327,13 +332,40 @@
 
 <div class="sheet" id="cartSheet" hidden>
   <div class="sheet-inner">
-    <div class="sheet-head"><h2 class="sheet-title">Review order</h2><button id="closeCart" class="sheet-close" type="button" aria-label="Close">×</button></div>
-    <div id="cartLines"></div>
-    <div class="upsell" id="upsell"></div>
-    <div class="sheet-foot"><span>TOTAL<b id="cartFootTotal">₱0</b></span></div>
-    <div class="field"><label for="custName">Your name (optional)</label><input id="custName" type="text" maxlength="40" autocomplete="off" placeholder="Guest"></div>
-    <p id="sendErr" class="formerr" hidden></p>
-    <div style="margin-top:16px"><button id="sendBtn" class="btn primary wide" type="button">Send order</button></div>
+    <div class="sheet-head"><h2 class="sheet-title" id="checkoutTitle">Review order</h2><button id="closeCart" class="sheet-close" type="button" aria-label="Close">×</button></div>
+    <div class="step-dots" id="stepDots"><i class="on"></i><i></i><i></i></div>
+
+    <div id="stepReview">
+      <div id="cartLines"></div>
+      <div class="field" style="margin-top:12px"><label for="custName">Your name (optional)</label><input id="custName" type="text" maxlength="40" autocomplete="off" placeholder="Guest"></div>
+      <div class="sheet-foot"><span>TOTAL<b class="foot-total">₱0</b></span></div>
+      <button id="checkoutBtn" class="btn primary wide" type="button">Checkout</button>
+      <p id="sendErr" class="formerr" hidden></p>
+    </div>
+
+    <div id="stepUpsell" hidden>
+      <p class="note" style="margin:0 0 12px">Add something sweet before you check out.</p>
+      <div class="upsell-grid" id="upsellGrid"></div>
+      <div class="sheet-foot"><span>TOTAL<b class="foot-total">₱0</b></span></div>
+      <div class="step-actions"><button id="upsellBack" class="btn" type="button">Back</button><button id="upsellNext" class="btn primary" type="button">Continue</button></div>
+    </div>
+
+    <div id="stepMode" hidden>
+      <p class="note" style="margin:0 0 12px">Dine in or take out?</p>
+      <div class="mode-opts" id="modeOpts">
+        <button class="mode-opt" type="button" data-mode="Dine in">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10"/><path d="M16 3c-1.5 2-2 4-2 6v2h4V9c0-2-.5-4-2-6zM16 11v10"/></svg>
+          <span>Dine in</span>
+        </button>
+        <button class="mode-opt" type="button" data-mode="Take out">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1 13H7L6 8z"/><path d="M9 8a3 3 0 0 1 6 0"/></svg>
+          <span>Take out</span>
+        </button>
+      </div>
+      <div class="sheet-foot"><span>TOTAL<b class="foot-total">₱0</b></span></div>
+      <p id="sendErr2" class="formerr" hidden></p>
+      <div class="step-actions"><button id="modeBack" class="btn" type="button">Back</button><button id="placeBtn" class="btn primary" type="button" disabled>Place order</button></div>
+    </div>
   </div>
 </div>
 
@@ -516,7 +548,7 @@
   function repoName(){return getLs(REPO_KEY)||REPO_DEFAULT}
   function rawUrl(){return 'https://raw.githubusercontent.com/'+repoName()+'/main/data.json?t='+Date.now()}
 
-  var products=[],photos=[],activeCat='all',searchTerm='',cart=[];
+  var products=[],photos=[],activeCat='all',searchTerm='',cart=[],checkoutStep=1,orderMode=null;
   var detailId=null,detailVariant=null,detailQty=1;
   var myUids=[],knownOrders=[],statusMap={},currentOrder=null,readyAck=[];
   var pollBusy=false,sending=false,pollingStarted=false,toastTimer=null;
@@ -739,7 +771,7 @@
     if(!detailId)return;
     addItem(detailId,detailVariant,detailQty);
     $('detailSheet').hidden=true;
-    renderCartSheet();$('cartSheet').hidden=false;
+    openCheckout();
   });
   $('closeDetail').addEventListener('click',function(){$('detailSheet').hidden=true});
   $('detailSheet').addEventListener('click',function(e){if(e.target===$('detailSheet'))$('detailSheet').hidden=true});
@@ -761,26 +793,54 @@
           '<span class="c-amt">'+money(lineTotal(it))+'</span></div>';
       }).join('');
     }
-    $('cartFootTotal').textContent=money(cartTotal());
-    $('sendBtn').textContent='Send order';
-    $('sendBtn').disabled=cart.length===0||sending;
-    renderUpsell();
+    document.querySelectorAll('.foot-total').forEach(function(el){el.textContent=money(cartTotal())});
+    $('checkoutBtn').disabled=!cart.length||sending;
+    if(checkoutStep===2)renderUpsell();
+    if(checkoutStep===3)renderModes();
   }
   function renderUpsell(){
-    var box=$('upsell');if(!box)return;
-    var inCart={};cart.forEach(function(it){inCart[it.id]=1});
-    var picks=products.filter(function(p){return PASTRY_CATS.indexOf(p.cat)>-1&&!inCart[p.id]}).slice(0,6);
-    if(!picks.length){box.hidden=true;return}
-    box.hidden=false;
-    box.innerHTML='<div class="upsell-head"><b>Try our pastries</b><span>Add something sweet</span></div>'+
-      '<div class="upsell-row">'+picks.map(function(p){
-        return '<div class="up-card"><img src="'+heroFor(p)+'" alt="" loading="lazy"><div class="up-body"><div class="up-name">'+esc(p.name)+'</div><div class="up-price"><span>'+money(p.price)+'</span><button class="up-add" type="button" data-up="'+esc(p.id)+'" aria-label="Add '+esc(p.name)+'">+</button></div></div></div>';
-      }).join('')+'</div>';
+    var box=$('upsellGrid');if(!box)return;
+    var map={};products.forEach(function(p){map[p.id]=p});
+    var picks=['classic-chocolate-chip','biscoff-drip','matcha-cashew','red-velvet-cream-cheese','blueberry-cheesecake','cinnamon-sunday'].map(function(id){return map[id]}).filter(Boolean);
+    box.innerHTML=picks.map(function(p){
+      var has=cart.some(function(it){return it.id===p.id});
+      return '<div class="ug-card"><img src="'+heroFor(p)+'" alt="" loading="lazy"><div class="ug-body"><div class="ug-name">'+esc(p.name)+'</div><div class="ug-row"><span class="ug-price">'+money(p.price)+'</span>'+
+        (has?'<span class="ug-add on">Added</span>':'<button class="ug-add" type="button" data-up="'+esc(p.id)+'" aria-label="Add '+esc(p.name)+'">+</button>')+
+        '</div></div></div>';
+    }).join('');
   }
-  $('reviewBtn').addEventListener('click',function(){renderCartSheet();$('sendErr').hidden=true;$('cartSheet').hidden=false});
+  function renderModes(){
+    var opts=$('modeOpts').querySelectorAll('[data-mode]');
+    for(var i=0;i<opts.length;i++)opts[i].classList.toggle('on',opts[i].dataset.mode===orderMode);
+    $('placeBtn').disabled=!orderMode||sending;
+  }
+  function showCheckoutStep(n){
+    checkoutStep=n;
+    $('stepReview').hidden=n!==1;
+    $('stepUpsell').hidden=n!==2;
+    $('stepMode').hidden=n!==3;
+    $('checkoutTitle').textContent=n===1?'Review order':(n===2?'Try our pastries':'Dine in or take out');
+    var dots=$('stepDots').children;
+    for(var i=0;i<dots.length;i++)dots[i].className=i<n?'on':'';
+    if(n===2)renderUpsell();
+    if(n===3)renderModes();
+  }
+  function openCheckout(){
+    checkoutStep=1;orderMode=null;$('sendErr').hidden=true;$('sendErr2').hidden=true;
+    renderCartSheet();showCheckoutStep(1);$('cartSheet').hidden=false;
+  }
+  $('reviewBtn').addEventListener('click',openCheckout);
   $('closeCart').addEventListener('click',function(){$('cartSheet').hidden=true});
   $('cartSheet').addEventListener('click',function(e){if(e.target===$('cartSheet'))$('cartSheet').hidden=true});
-  $('upsell').addEventListener('click',function(e){
+  $('checkoutBtn').addEventListener('click',function(){if(!cart.length)return;showCheckoutStep(2)});
+  $('upsellBack').addEventListener('click',function(){showCheckoutStep(1)});
+  $('upsellNext').addEventListener('click',function(){showCheckoutStep(3)});
+  $('modeBack').addEventListener('click',function(){showCheckoutStep(2)});
+  $('modeOpts').addEventListener('click',function(e){
+    var b=e.target.closest('[data-mode]');if(!b)return;
+    orderMode=b.dataset.mode;renderModes();
+  });
+  $('upsellGrid').addEventListener('click',function(e){
     var b=e.target.closest('button[data-up]');if(!b)return;
     addItem(b.dataset.up,null,1);
     renderCartSheet();renderCartBar();
@@ -793,44 +853,45 @@
     renderCartSheet();renderCartBar();
   });
 
-  function sendOrder(uid,items,total,customer){
+  function sendOrder(uid,items,total,customer,mode){
     return apiGet().then(function(r){
       if(!r.ok)throw new Error(friendlyError(r));
       var payload=r.payload||{},remoteOrders=extractOrders(payload),id=1;
       remoteOrders.forEach(function(o){if(isFinite(+o.id)&&+o.id>=id)id=+o.id+1});
       var ts=new Date().toISOString();
-      var order={id:id,uid:uid,items:items,total:num(total),profit:num(total),ts:ts,status:'pending',statusAt:ts,customer:customer,source:'menu'};
+      var order={id:id,uid:uid,items:items,total:num(total),profit:num(total),ts:ts,status:'pending',statusAt:ts,customer:customer,mode:mode||null,source:'menu'};
         knownOrders=mergeOrders(knownOrders.concat([order]),remoteOrders,extractDeleted(payload));
         return sbAppend(order).catch(function(){}).then(function(){return rtSend(order)}).catch(function(){pending.push(order);savePending();return order});
       });
   }
 
-  $('sendBtn').addEventListener('click',function(){
-    if(sending||!cart.length)return;
+  function placeOrder(){
+    if(sending||!cart.length||!orderMode)return;
     if('Notification' in window&&Notification.permission==='default'){
       try{Notification.requestPermission()}catch(e){}
     }
-    sending=true;$('sendBtn').disabled=true;$('sendErr').hidden=true;
+    sending=true;$('placeBtn').disabled=true;$('sendErr2').hidden=true;
     var items=cart.map(function(it){return {name:it.name,cat:it.cat,price:it.price,unit:lineUnit(it),variant:it.variant||null,size:null,qty:it.qty}});
     var total=cartTotal(),customer=($('custName').value||'').trim()||'Guest',uid=newUid();
-    sendOrder(uid,items,total,customer).then(function(order){
+    sendOrder(uid,items,total,customer,orderMode).then(function(order){
       if(myUids.indexOf(uid)===-1)myUids.push(uid);
       currentOrder=order;statusMap[uid]='pending';saveMy();try{var uu=new URL(location.href);uu.searchParams.set('o',uid);history.replaceState(null,'',uu)}catch(e){}
       cart=[];renderCartBar();
-      $('cartSheet').hidden=true;$('custName').value='';
+      $('cartSheet').hidden=true;$('custName').value='';orderMode=null;checkoutStep=1;
       showView('ticket');
       toast(pending.indexOf(order)!==-1?'Order saved — will send when the counter is online':'Order '+pad(order.id)+' sent');
     }).catch(function(e){
-      $('sendErr').textContent=e.message||'The order didn\'t go through. Try again.';
-      $('sendErr').hidden=false;
-    }).then(function(){sending=false;$('sendBtn').disabled=(cart.length===0)});
-  });
+      $('sendErr2').textContent=e.message||'The order didn\'t go through. Try again.';
+      $('sendErr2').hidden=false;
+    }).then(function(){sending=false;renderModes()});
+  }
+  $('placeBtn').addEventListener('click',placeOrder);
 
   function renderTicket(){
     var o=currentOrder;if(!o)return;
     var done=o.status==='done';
     $('tNum').textContent=pad(o.id);
-    $('tWho').textContent='For '+(o.customer||'Guest')+' · show this number at the counter';
+    $('tWho').textContent='For '+(o.customer||'Guest')+(o.mode?' · '+o.mode:'')+' · show this number at the counter';
     $('tStatus').textContent=done?'READY':'IN THE QUEUE';
     $('tStatus').classList.toggle('is-ready',done);
     $('readyStamp').hidden=!done;
@@ -838,7 +899,7 @@
     $('readyLine').textContent='Order '+pad(o.id)+' — ready at the counter for '+(o.customer||'Guest')+'.';
     $('tLines').innerHTML=(o.items||[]).map(function(it){
       var unit=it.unit!=null?it.unit:(num(it.price)+(it.size===16?SIZE_EXTRA:0));
-      return '<div class="t-line"><span>'+Number(it.qty)+'× '+esc(it.name)+(it.size?' · '+it.size+' oz':'')+'</span><span>'+money(unit*it.qty)+'</span></div>';
+      return '<div class="t-line"><span>'+Number(it.qty)+'× '+esc(it.name)+(it.variant?' · '+esc(it.variant):(it.size?' · '+it.size+' oz':''))+'</span><span>'+money(unit*it.qty)+'</span></div>';
     }).join('')||'<div class="t-line"><span>No item details</span><span></span></div>';
     $('tTotal').textContent=money(o.total);
     $('tTime').textContent=new Date(o.ts).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
