@@ -378,8 +378,11 @@
       if(!Array.isArray(orders))orders=[];
       if(orders.some(function(o){return o.uid===order.uid}))return true;
       orders.push(order);
-      return sbPut(at,{orders:orders},Number(row.rev)||0).then(function(ok){return ok?true:sbAppend(order,n+1)});
+      return sbPut(at,{orders:orders,statuses:(row.doc&&row.doc.statuses)||{}},Number(row.rev)||0).then(function(ok){return ok?true:sbAppend(order,n+1)});
     })});
+  }
+  function sbStatuses(){
+    return sbToken().then(function(at){return sbRow(at)}).then(function(row){return (row.doc&&row.doc.statuses)||{}});
   }
   var rt=null,rtReady=false,pending=[];
   function loadPending(){try{pending=JSON.parse(getLs(PENDING_KEY)||'[]');if(!Array.isArray(pending))pending=[]}catch(e){pending=[]}}
@@ -847,26 +850,48 @@
       });
     }).catch(function(){}).then(function(){pollBusy=false});
   }
+  var statusBusy=false;
+  function pollStatuses(){
+    if(statusBusy||!myUids.length)return Promise.resolve();
+    statusBusy=true;
+    return sbStatuses().then(function(st){
+      Object.keys(st||{}).forEach(function(uid){
+        if(myUids.indexOf(uid)===-1)return;
+        var s=st[uid];
+        if(!s||s.status!=='done')return;
+        var o=null;
+        if(currentOrder&&String(currentOrder.uid)===uid)o=currentOrder;
+        for(var i=0;i<knownOrders.length;i++){if(String(knownOrders[i].uid)===uid){o=knownOrders[i];break}}
+        if(!o)return;
+        if(o.status!=='done'){
+          o.status='done';o.statusAt=s.statusAt||o.statusAt;
+          if(currentOrder&&String(currentOrder.uid)===uid){currentOrder=o;saveMy();if(!$('ticket').hidden)renderTicket()}
+        }
+        onReady(o);
+      });
+    }).catch(function(){}).then(function(){statusBusy=false});
+  }
   function startPolling(){
     if(pollingStarted)return;
     pollingStarted=true;
     setInterval(poll,POLL_MS);
-    document.addEventListener('visibilitychange',function(){if(!document.hidden)poll()});
-    window.addEventListener('focus',function(){poll()});
+    setInterval(pollStatuses,2000);
+    document.addEventListener('visibilitychange',function(){if(!document.hidden){poll();pollStatuses()}});
+    window.addEventListener('focus',function(){poll();pollStatuses()});
   }
 
   $('refreshBtn').addEventListener('click',function(){
     $('refreshBtn').disabled=true;
-    poll().then(function(){$('refreshBtn').disabled=false});
+    Promise.all([poll(),pollStatuses()]).then(function(){$('refreshBtn').disabled=false});
   });
   $('againBtn').addEventListener('click',function(){
     currentOrder=null;statusMap={};saveMy();
-    showView('menu');renderCartBar();poll();
+    showView('menu');renderCartBar();poll();pollStatuses();
   });
   $('ticketBack').addEventListener('click',function(){showView('menu');renderCartBar()});
-  $('bellBtn').addEventListener('click',function(){showView('ticket');poll()});
+  $('bellBtn').addEventListener('click',function(){showView('ticket');poll();pollStatuses()});
   $('navMenu').addEventListener('click',function(){showView('menu');renderCartBar()});
-  $('navOrders').addEventListener('click',function(){showView('ticket');poll()});
+  $('navOrders').addEventListener('click',function(){showView('ticket');poll();pollStatuses()});
 
   function boot(){
     if('serviceWorker' in navigator){try{navigator.serviceWorker.register('sw.js',{scope:'./',updateViaCache:'none'}).catch(function(){})}catch(e){}}
@@ -879,7 +904,7 @@
       else showView('menu');
       renderCartBar();
       renderAlertState();
-      poll();
+      poll();pollStatuses();
     });
   }
   $('retryBtn').addEventListener('click',boot);

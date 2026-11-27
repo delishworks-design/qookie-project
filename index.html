@@ -559,13 +559,36 @@
     const r=await fetch('https://vggaswbjsmyvfheofnnj.supabase.co/rest/v1/bloom_data?select=doc,rev&user_id=eq.'+SB_QKU,{headers:{apikey:SB_KEY,Authorization:'Bearer '+at}});
     if(!r.ok)throw new Error('Queue read failed');
     const a=await r.json(),row=a[0]||{doc:{orders:[]},rev:0};
-    return {orders:Array.isArray(row.doc&&row.doc.orders)?row.doc.orders:[],rev:Number(row.rev)||0};
+    return {orders:Array.isArray(row.doc&&row.doc.orders)?row.doc.orders:[],statuses:(row.doc&&row.doc.statuses)||{},rev:Number(row.rev)||0};
   }
-  async function sbClear(rev){
+  async function sbClear(rev,statuses){
     const at=await sbToken();
-    const r=await fetch('https://vggaswbjsmyvfheofnnj.supabase.co/rest/v1/bloom_data?user_id=eq.'+SB_QKU+'&rev=eq.'+rev,{method:'PATCH',headers:{apikey:SB_KEY,Authorization:'Bearer '+at,'Content-Type':'application/json',Prefer:'return=representation'},body:JSON.stringify({doc:{orders:[]},rev:rev+1})});
+    const r=await fetch('https://vggaswbjsmyvfheofnnj.supabase.co/rest/v1/bloom_data?user_id=eq.'+SB_QKU+'&rev=eq.'+rev,{method:'PATCH',headers:{apikey:SB_KEY,Authorization:'Bearer '+at,'Content-Type':'application/json',Prefer:'return=representation'},body:JSON.stringify({doc:{orders:[],statuses:statuses||{}},rev:rev+1})});
     if(!r.ok)throw new Error('Queue clear failed');
     return (await r.json()).length>0;
+  }
+  async function sbRow(){
+    const at=await sbToken();
+    const r=await fetch('https://vggaswbjsmyvfheofnnj.supabase.co/rest/v1/bloom_data?select=doc,rev&user_id=eq.'+SB_QKU,{headers:{apikey:SB_KEY,Authorization:'Bearer '+at}});
+    if(!r.ok)throw new Error('Queue read failed');
+    const a=await r.json(),row=a[0]||{doc:{orders:[]},rev:0};
+    return {doc:row.doc||{orders:[]},rev:Number(row.rev)||0};
+  }
+  async function sbSetStatus(uid,statusAt,n){
+    n=n||0;if(n>4)return false;
+    const at=await sbToken();
+    const row=await sbRow();
+    const doc=row.doc||{};
+    const statuses=Object.assign({},doc.statuses||{});
+    statuses[String(uid)]={status:'done',statusAt:statusAt||new Date().toISOString()};
+    const keys=Object.keys(statuses);
+    if(keys.length>200)keys.slice(0,keys.length-200).forEach(k=>{delete statuses[k]});
+    const orders=Array.isArray(doc.orders)?doc.orders:[];
+    const r=await fetch('https://vggaswbjsmyvfheofnnj.supabase.co/rest/v1/bloom_data?user_id=eq.'+SB_QKU+'&rev=eq.'+row.rev,{method:'PATCH',headers:{apikey:SB_KEY,Authorization:'Bearer '+at,'Content-Type':'application/json',Prefer:'return=representation'},body:JSON.stringify({doc:{orders:orders,statuses:statuses},rev:row.rev+1})});
+    if(!r.ok)return sbSetStatus(uid,statusAt,n+1);
+    const a=await r.json();
+    if(!a.length)return sbSetStatus(uid,statusAt,n+1);
+    return true;
   }
   let rt=null,rtReady=false;
   function rtRaw(event,payload,ref){try{rt.send(JSON.stringify({topic:SB_TOPIC,event:event,payload:payload,ref:ref,join_ref:'1'}))}catch(e){}}
@@ -647,7 +670,7 @@
       const q=await sbQueue();
       if(q.orders.length){
         q.orders.forEach(o=>{try{rtOnOrder(o)}catch(e){}});
-        await sbClear(q.rev);
+        await sbClear(q.rev,q.statuses);
       }
     }catch(e){}
     finally{queueBusy=false}
@@ -1310,6 +1333,7 @@
     order.statusAt=new Date().toISOString();
     save();
     try{if(rtReady)rtRaw('broadcast',{event:'status',payload:{uid:uid,status:'done',statusAt:order.statusAt}},'s'+Date.now())}catch(e){}
+    sbSetStatus(uid,order.statusAt).catch(()=>{});
     renderHistory();renderMenu();renderCart();
     toast('Order #'+String(order.id).padStart(3,'0')+' tapos na');
   });
