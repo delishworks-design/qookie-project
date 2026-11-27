@@ -132,7 +132,7 @@
   }
   .sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
   .sheet-title{font-family:Georgia,serif;font-size:22px;margin:0;letter-spacing:-.02em}
-  .sheet-close{border:0;background:var(--cream);border-radius:50%;width:38px;height:38px;font-size:18px;color:var(--muted)}
+  .sheet-close{flex:none;border:0;background:var(--cream);border-radius:50%;width:38px;height:38px;font-size:18px;color:var(--muted)}
   .c-row{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
   .c-info strong{display:block;font-family:Georgia,serif;font-size:15px}
   .c-info small{display:block;color:var(--muted);font-size:11px;margin-top:3px}
@@ -149,15 +149,11 @@
   .btn.primary{background:var(--tan);border-color:var(--tan);color:var(--paper)}
   .btn.wide{width:100%}
   .formerr{color:#9B2C2C;font-size:12px;margin:8px 0 0}
-  .detail-hero{height:200px;border-radius:20px;background:var(--cream);display:grid;place-items:center;overflow:hidden;margin-bottom:-20px;position:relative}
-  .detail-hero img{width:190px;height:190px;object-fit:cover;border-radius:50%}
-  .detail-back,.detail-heart{position:absolute;top:16px;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--paper);display:grid;place-items:center;color:var(--ink);z-index:2}
-  .detail-back{left:16px}.detail-heart{right:16px}
-  .detail-card{position:relative;background:var(--paper);border-radius:20px 20px 0 0;padding:28px 4px 0}
-  .detail-title{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
-  .detail-title h2{font-family:Georgia,serif;font-size:24px;letter-spacing:-.03em;margin:0}
-  .detail-title .price{font-family:Georgia,serif;font-size:17px}
-  .pill{display:inline-block;background:var(--tan);color:var(--paper);border-radius:12px;padding:4px 8px;font-size:10px;font-weight:700;margin-bottom:8px}
+  .detail-hero{height:170px;border-radius:18px;background:var(--cream);display:grid;place-items:center;overflow:hidden;margin-bottom:12px}
+  .detail-hero img{width:158px;height:158px;object-fit:cover;border-radius:50%}
+  .detail-meta{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-top:2px}
+  .detail-meta .price{font-family:Georgia,serif;font-size:22px;letter-spacing:-.02em}
+  .detail-meta .unit{font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
   .section-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:16px 0 8px}
   .size-chips{display:flex;gap:8px}
   .size-chips button{min-height:40px;padding:0 14px;border-radius:20px;border:1px solid var(--line);background:var(--paper);color:var(--muted);font-size:12px}
@@ -165,11 +161,7 @@
   .about{font-size:12px;line-height:1.5;color:var(--muted);margin:0}
   .volume-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px}
   .volume-row span{font-family:Georgia,serif;font-size:14px}
-  .buy-row{
-    position:sticky;bottom:0;z-index:2;display:flex;gap:10px;margin-top:16px;
-    background:var(--paper);padding:12px 0 2px;border-top:1px solid var(--line);
-  }
-  .buy-row .btn.primary{flex:1}
+
   .group-h{font-family:Georgia,serif;font-size:18px;letter-spacing:-.02em;margin:10px 0 -4px;color:var(--brown)}
   .step-dots{display:flex;gap:6px;margin:0 0 14px}
   .step-dots i{height:4px;flex:1;border-radius:2px;background:var(--line)}
@@ -186,8 +178,12 @@
   .mode-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .mode-opt{border:1.5px solid var(--line);border-radius:16px;background:var(--paper);padding:18px 12px;display:grid;gap:8px;place-items:center;color:var(--muted);font-family:Georgia,serif;font-size:15px}
   .mode-opt.on{border-color:var(--tan);background:#FBF1E4;color:var(--brown);box-shadow:0 0 0 2px rgba(201,142,82,.22) inset}
-  .step-actions{display:flex;gap:10px;margin-top:14px}
-  .step-actions .btn{flex:1}
+  .sheet-actions{display:flex;gap:10px;margin-top:16px}
+  .sheet-actions .btn{flex:1}
+  .onboard{position:fixed;inset:0;z-index:60;background:rgba(20,12,7,.55);display:grid;place-items:center;padding:24px}
+  .onboard-card{width:min(300px,100%);background:var(--paper);border-radius:22px;padding:26px 22px 20px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+  .onboard-icon{width:64px;height:64px;border-radius:50%;background:#FBF1E4;color:var(--tan);display:grid;place-items:center;margin:0 auto}
+  .onboard-card b{display:block;font-family:Georgia,serif;font-size:24px;letter-spacing:-.02em;margin:12px 0 18px}
   .ticket-top{display:flex;align-items:center;gap:12px;margin-bottom:18px}
   .ticket-top h2{font-family:Georgia,serif;font-size:20px;margin:0;flex:1}
   .stub{border:1px solid var(--line);border-radius:20px;background:var(--paper);padding:20px;position:relative;overflow:hidden;text-align:center}
@@ -231,7 +227,7 @@
 </style>
 <script>
 (function(){
-  var BUILD='v2026-11-28-0225';window.__BUILD=BUILD;
+  var BUILD='v2026-11-28-0245';window.__BUILD=BUILD;
   function stamp(){var el=document.getElementById('buildTag');if(el)el.textContent=BUILD}
   function check(){
     fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
@@ -274,7 +270,6 @@
     </label>
 
     <h1 class="heading">Our signature menu.</h1>
-    <p class="note" style="margin-top:-10px;margin-bottom:16px">Coffee, pastries, and more. Order here.</p>
 
     <div class="chips" id="catChips">
       <button class="chip active" type="button" data-cat="all" aria-pressed="true">All</button>
@@ -339,19 +334,17 @@
       <div id="cartLines"></div>
       <div class="field" style="margin-top:12px"><label for="custName">Your name (optional)</label><input id="custName" type="text" maxlength="40" autocomplete="off" placeholder="Guest"></div>
       <div class="sheet-foot"><span>TOTAL<b class="foot-total">₱0</b></span></div>
-      <button id="checkoutBtn" class="btn primary wide" type="button">Checkout</button>
+      <div class="sheet-actions"><button id="checkoutBtn" class="btn primary" type="button">Checkout</button></div>
       <p id="sendErr" class="formerr" hidden></p>
     </div>
 
     <div id="stepUpsell" hidden>
-      <p class="note" style="margin:0 0 12px">Add something sweet before you check out.</p>
       <div class="upsell-grid" id="upsellGrid"></div>
       <div class="sheet-foot"><span>TOTAL<b class="foot-total">₱0</b></span></div>
-      <div class="step-actions"><button id="upsellBack" class="btn" type="button">Back</button><button id="upsellNext" class="btn primary" type="button">Continue</button></div>
+      <div class="sheet-actions"><button id="upsellBack" class="btn" type="button">Back</button><button id="upsellNext" class="btn primary" type="button">Continue</button></div>
     </div>
 
     <div id="stepMode" hidden>
-      <p class="note" style="margin:0 0 12px">Dine in or take out?</p>
       <div class="mode-opts" id="modeOpts">
         <button class="mode-opt" type="button" data-mode="Dine in">
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10"/><path d="M16 3c-1.5 2-2 4-2 6v2h4V9c0-2-.5-4-2-6zM16 11v10"/></svg>
@@ -364,34 +357,28 @@
       </div>
       <div class="sheet-foot"><span>TOTAL<b class="foot-total">₱0</b></span></div>
       <p id="sendErr2" class="formerr" hidden></p>
-      <div class="step-actions"><button id="modeBack" class="btn" type="button">Back</button><button id="placeBtn" class="btn primary" type="button" disabled>Place order</button></div>
+      <div class="sheet-actions"><button id="modeBack" class="btn" type="button">Back</button><button id="placeBtn" class="btn primary" type="button" disabled>Place order</button></div>
     </div>
   </div>
 </div>
 
 <div class="sheet" id="detailSheet" hidden>
   <div class="sheet-inner">
-    <div class="detail-hero">
-      <button id="closeDetail" class="detail-back" type="button" aria-label="Close">←</button>
-      <button class="detail-heart" type="button" aria-label="Saved">♡</button>
-      <img id="detailHero" src="assets/hero-coffee.svg" alt="">
-    </div>
-    <div class="detail-card">
-      <span class="pill">★ 4.3</span>
-      <div class="detail-title"><h2 id="detailName">—</h2><span class="price" id="detailPrice">₱0</span></div>
-      <p class="section-label">Serve</p>
-      <div class="size-chips" id="detailSizes"></div>
-      <p class="section-label">About</p>
-      <p class="about" id="detailAbout">—</p>
-      <div class="volume-row"><span id="detailVolume">Iced</span>
-        <div class="stepper" id="detailStepper">
-          <button type="button" data-act="dec" aria-label="Decrease quantity">−</button>
-          <span id="detailQty">1</span>
-          <button type="button" data-act="inc" aria-label="Increase quantity">+</button>
-        </div>
+    <div class="sheet-head"><h2 class="sheet-title" id="detailName">—</h2><button id="closeDetail" class="sheet-close" type="button" aria-label="Close">×</button></div>
+    <div class="detail-hero"><img id="detailHero" src="assets/hero-coffee.svg" alt=""></div>
+    <div class="detail-meta"><span class="price" id="detailPrice">₱0</span><span class="unit" id="detailUnit">1 pc</span></div>
+    <p class="section-label" id="serveLabel">Serve</p>
+    <div class="size-chips" id="detailSizes"></div>
+    <p class="section-label">About</p>
+    <p class="about" id="detailAbout">—</p>
+    <div class="volume-row"><span>Quantity</span>
+      <div class="stepper" id="detailStepper">
+        <button type="button" data-act="dec" aria-label="Decrease quantity">−</button>
+        <span id="detailQty">1</span>
+        <button type="button" data-act="inc" aria-label="Increase quantity">+</button>
       </div>
-      <div class="buy-row"><button id="buyBtn" class="btn primary" type="button">Buy now</button></div>
     </div>
+    <div class="sheet-actions"><button id="buyBtn" class="btn primary" type="button">Buy now</button></div>
   </div>
 </div>
 
@@ -400,6 +387,15 @@
   <b>YOUR ORDER IS READY</b>
   <span id="readyPopText">—</span>
   <button id="readyPopView" class="btn" type="button">View order</button>
+</div>
+<div id="onboard" class="onboard" hidden>
+  <div class="onboard-card" role="dialog" aria-modal="true" aria-labelledby="onboardTitle">
+    <div class="onboard-icon">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l6 17 2.4-6.6L20 11z"/></svg>
+    </div>
+    <b id="onboardTitle">Tap to order</b>
+    <button id="onboardBtn" class="btn primary wide" type="button">Got it</button>
+  </div>
 </div>
 <div id="toast" role="status" hidden></div>
 
@@ -703,7 +699,7 @@
     $('detailAbout').textContent=aboutFor(p);
     var has=p.iced!=null;
     $('detailSizes').hidden=!has;
-    document.querySelector('.detail-card .section-label').hidden=!has;
+    $('serveLabel').hidden=!has;
     renderDetail();
     $('detailSheet').hidden=false;
   }
@@ -714,7 +710,7 @@
     var unit=has?(detailVariant==='Iced'?num(p.iced):num(p.price)):num(p.price);
     $('detailPrice').textContent=money(unit);
     $('detailQty').textContent=detailQty;
-    $('detailVolume').textContent=has?detailVariant:(p.unitLabel||'1 pc');
+    $('detailUnit').textContent=has?detailVariant:(p.unitLabel||'1 pc');
     if(has){
       $('detailSizes').innerHTML=[['Hot',p.price],['Iced',p.iced]].map(function(v){
         var on=v[0]===detailVariant;
@@ -1042,6 +1038,17 @@
   $('navMenu').addEventListener('click',function(){showView('menu');renderCartBar()});
   $('navOrders').addEventListener('click',function(){showView('ticket');poll();pollStatuses()});
 
+  function maybeOnboard(){
+    try{if(localStorage.getItem('qookie.menu.onboarded')==='1')return}catch(e){}
+    $('onboard').hidden=false;
+  }
+  function closeOnboard(){
+    try{localStorage.setItem('qookie.menu.onboarded','1')}catch(e){}
+    $('onboard').hidden=true;
+  }
+  $('onboardBtn').addEventListener('click',closeOnboard);
+  $('onboard').addEventListener('click',function(e){if(e.target===$('onboard'))closeOnboard()});
+
   function boot(){
     if('serviceWorker' in navigator){try{navigator.serviceWorker.register('sw.js',{scope:'./',updateViaCache:'none'}).catch(function(){})}catch(e){}}
     rtConnect();
@@ -1050,7 +1057,7 @@
       if(!ok)return;
       startPolling();
       if(currentOrder&&myUids.indexOf(String(currentOrder.uid))!==-1)showView('ticket');
-      else showView('menu');
+      else{showView('menu');maybeOnboard()}
       renderCartBar();
       renderAlertState();
       poll();pollStatuses();
