@@ -276,6 +276,19 @@
     .menu-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
   }
 </style>
+<script>
+(function(){
+  var BUILD='v2026-11-27-1215';window.__BUILD=BUILD;
+  function stamp(){var el=document.getElementById('buildTag');if(el)el.textContent=BUILD}
+  function check(){
+    fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+      if(j&&j.build&&j.build!==BUILD){var u=new URL(location.href);u.searchParams.set('v',j.build);location.replace(u.toString())}
+    }).catch(function(){});
+  }
+  document.addEventListener('DOMContentLoaded',stamp);
+  setTimeout(check,5000);setInterval(check,60000);
+})();
+</script>
 </head>
 <body>
 
@@ -1496,5 +1509,6 @@
   });
 })();
 </script>
+<div id="buildTag" style="position:fixed;right:6px;bottom:3px;font:10px/1 monospace;opacity:.35;z-index:9999;pointer-events:none;color:#000"></div>
 </body>
 </html>
