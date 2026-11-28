@@ -153,17 +153,52 @@
   .receipt .rt{border-top:1px dashed #999;margin-top:8px;padding-top:8px;font-weight:700;font-size:15px}
   .receipt .rf{text-align:center;border-top:1px dashed #999;margin-top:10px;padding-top:8px}
   kbd{display:inline-block;padding:1px 6px;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;background:var(--paper);font-size:11px}
-  .quick-dock{position:fixed;left:224px;bottom:16px;z-index:45;display:flex;flex-direction:row;gap:6px;background:rgba(255,253,249,.94);border:1px solid var(--line);border-radius:16px;padding:6px;box-shadow:0 8px 26px rgba(42,27,18,.16)}
-  .quick-dock button{width:46px;height:46px;border:1px solid var(--line);border-radius:50%;background:var(--paper);font-size:19px;line-height:1;display:grid;place-items:center}
-  .quick-dock button:hover{border-color:var(--accent)}
-  .quick-dock button.go{background:var(--accent);border-color:var(--accent);color:#FFFDF9}
-  .cart-actions{display:none}
-  @media (max-width:900px){
-    .quick-dock{top:auto;bottom:76px;right:10px;left:10px;flex-direction:row;justify-content:space-around;border-radius:16px;padding:6px}
-    .quick-dock button{width:42px;height:42px;font-size:17px}
-    body.cart-open .quick-dock{display:none}
+  @media (max-width:599px){
   }
   #printArea{display:none}
+  @media (min-width:600px){
+    body{font-size:15px}
+    #app{grid-template-columns:236px minmax(0,1fr)}
+    #navRail{padding:18px 14px;gap:8px}
+    .nav-btn{min-height:58px;font-size:15px;padding:0 14px}
+    .nav-btn .ico{font-size:19px;width:24px}
+    .brand b{font-size:23px}
+    .brand small{font-size:11px}
+    .topbar{padding:14px 20px}
+    .topbar h1{font-size:25px}
+    main{padding:18px 20px 40px}
+    .view-head h2{font-size:31px}
+    .pos-grid{grid-template-columns:minmax(0,1fr) 420px;gap:20px}
+    .pos-toolbar{gap:10px;margin-bottom:14px}
+    #posSearch{min-height:54px;font-size:17px}
+    .btn{min-height:50px;padding:0 18px;font-size:13px}
+    .btn.sm{min-height:42px;font-size:12px}
+    .chip{min-height:42px;padding:0 16px;font-size:14px}
+    .ticket-tab{min-height:42px;padding:8px 14px;font-size:14px}
+    .product-grid{grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px}
+    .product-tile{min-height:172px;padding:14px}
+    .product-tile img{height:86px}
+    .product-tile .pname{font-size:18px}
+    .product-tile .pprice{font-size:21px}
+    .cart-panel{max-height:calc(100dvh - 132px)}
+    .cart-head{padding:14px 18px}
+    .cart-head strong{font-size:21px}
+    #cartLines{padding:10px 18px}
+    .cart-line .lname{font-size:16px}
+    .cart-line .lamt{font-size:18px}
+    .cart-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px 18px}
+    .cart-totals{padding:12px 18px;font-size:15px}
+    .tot-row.grand{font-size:26px}
+    #orderNotes{min-height:52px;font-size:14px;margin:0 18px 10px;width:calc(100% - 36px)}
+    .charge-wrap{padding:0 18px 18px}
+    #chargeBtn{min-height:66px;font-size:18px}
+    .panel{padding:18px}
+    .panel h3{font-size:21px}
+    input,select,textarea{min-height:48px;font-size:15px}
+    .queue-row{padding:16px}
+    .queue-row .items{font-size:14px}
+    .card-stat b{font-size:32px}
+  }
   @media print{
     body{background:#fff}
     #app,#toast,.overlay{display:none!important}
@@ -173,7 +208,7 @@
     #printArea .receipt{border:0;padding:0}
     @page{margin:8mm}
   }
-  @media (max-width:900px){
+  @media (max-width:599px){
     #app{display:block;height:auto;min-height:100dvh;overflow:visible}
     #navRail{position:fixed;bottom:0;left:0;right:0;z-index:40;flex-direction:row;padding:6px;gap:2px;overflow-x:auto;background:var(--ink)}
     .brand,.rail-foot{display:none}
@@ -191,7 +226,7 @@
 </style>
 <script>
 (function(){
-  var BUILD='v2026-11-28-2035';window.__BUILD=BUILD;
+  var BUILD='v2026-11-29-0230';window.__BUILD=BUILD;
   function stamp(){var el=document.getElementById('buildTag');if(el)el.textContent=BUILD}
   function check(){
     fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
@@ -256,21 +291,23 @@
             <div id="productGrid" class="product-grid"></div>
           </div>
           <div class="cart-panel" id="cartPanel">
-            <div class="cart-head">
-              <span id="ticketName" class="tag">New</span>
-              <span class="spacer"></span>
-              <select id="orderMode" style="width:auto;min-height:38px;font-size:13px"><option>Dine in</option><option>Take out</option></select>
+            <div class="cart-head"><strong>YOUR ORDER</strong><span id="ticketName" class="tag">New</span><span class="spacer"></span>
+              <select id="orderMode" style="width:auto;min-height:46px;font-size:15px"><option>Dine in</option><option>Take out</option></select>
             </div>
             <div id="cartLines"></div>
-            <textarea id="orderNotes" placeholder="Order notes / kitchen instructions"></textarea>
+            <textarea id="orderNotes" placeholder="Notes / instructions"></textarea>
             <div class="cart-actions">
-              <button class="btn sm" id="discBtn" type="button" data-perm="discount">Discount</button>
-              <button class="btn sm" id="custBtn" type="button">Customer</button>
-              <button class="btn sm" id="splitBtn" type="button">Split</button>
-              <button class="btn sm" id="nameBtn" type="button">Name</button>
-              <button class="btn sm" id="holdBtn" type="button">Hold</button>
-              <button class="btn sm danger" id="voidBtn" type="button" data-perm="void">Void</button>
-              <button class="btn sm ghost" id="clearBtn" type="button">Clear</button>
+              <button class="btn" id="newBtn" type="button">＋ New</button>
+              <button class="btn" id="holdBtn" type="button">⏸ Hold</button>
+              <button class="btn" id="ordersBtn" type="button">≡ Orders</button>
+              <button class="btn" id="splitBtn" type="button">½ Split</button>
+              <button class="btn" id="discBtn" type="button" data-perm="discount">% Discount</button>
+              <button class="btn" id="custBtn" type="button">♙ Customer</button>
+              <button class="btn" id="notesBtn" type="button">✎ Notes</button>
+              <button class="btn" id="drawerBtn" type="button">▣ Drawer</button>
+              <button class="btn" id="nameBtn" type="button">Name</button>
+              <button class="btn danger" id="voidBtn" type="button" data-perm="void">Void</button>
+              <button class="btn ghost" id="clearBtn" type="button">Clear</button>
             </div>
             <div id="cartTotals" class="cart-totals"></div>
             <div class="charge-wrap"><button id="chargeBtn" type="button">Charge · F5</button></div>
@@ -394,18 +431,6 @@
 </div>
 
 <button id="mobileCartBtn" type="button">View order</button>
-<div id="quickDock" class="quick-dock" aria-label="Quick actions">
-  <button type="button" data-q="new" title="New order">＋</button>
-  <button type="button" data-q="hold" title="Hold order">⏸</button>
-  <button type="button" data-q="recall" title="Open orders">◷</button>
-  <button type="button" data-q="split" title="Split order">½</button>
-  <button type="button" data-q="discount" title="Discount">%</button>
-  <button type="button" data-q="customer" title="Customer">♙</button>
-  <button type="button" data-q="notes" title="Notes">✎</button>
-  <button type="button" data-q="drawer" title="Open cash drawer">▣</button>
-  <button type="button" data-q="clear" title="Clear order">×</button>
-  <button type="button" data-q="charge" class="go" title="Charge">₱</button>
-</div>
 
 <div id="kitchenAlert" class="kitchen-alert" role="alert" hidden>
   <div class="ka-top"><b>NEW ORDER</b><span id="kaNum">#000</span></div>
@@ -1491,6 +1516,10 @@ on('posSearch','input',renderPOS);
 on('posSearch','keydown',function(e){if(e.key==='Enter'){e.preventDefault();addFirstMatch()}});
 on('scanBtn','click',function(){$('posSearch').focus();toast('Scan now — Enter to add')});
 on('newTicketBtn','click',newTicket);
+on('newBtn','click',newTicket);
+on('ordersBtn','click',function(){orderTab='incoming';setView('orders')});
+on('notesBtn','click',function(){$('orderNotes').focus()});
+on('drawerBtn','click',openDrawer);
 on('orderMode','change',function(){ticket.mode=$('orderMode').value});
 on('orderNotes','input',function(){ticket.notes=$('orderNotes').value});
 on('catStrip','click',function(e){var b=e.target.closest('[data-cat]');if(!b)return;activeCat=b.dataset.cat;renderPOS()});
