@@ -137,6 +137,15 @@
   .pay-opt.on{background:var(--accent);border-color:var(--accent);color:#FFFDF9}
   .big-amount{font-family:Georgia,serif;font-size:40px;letter-spacing:-.05em;font-variant-numeric:tabular-nums;text-align:center;margin:10px 0}
   #toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:90;background:var(--ink);color:#FFFDF9;padding:11px 18px;border-radius:999px;font-size:13px;box-shadow:0 6px 20px rgba(42,27,18,.3)}
+  .kitchen-alert{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:80;width:min(94vw,720px);background:var(--ink);color:#FFFDF9;border:2px solid var(--accent);border-radius:16px;padding:16px 18px;box-shadow:0 14px 40px rgba(42,27,18,.45);animation:kaPulse 1.1s ease-in-out 3}
+  .kitchen-alert .ka-top{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+  .kitchen-alert .ka-top b{font-family:Georgia,serif;font-size:26px;letter-spacing:-.04em;color:var(--accent)}
+  .kitchen-alert .ka-top span{font-size:22px;font-weight:700}
+  .kitchen-alert .ka-items{font-size:15px;line-height:1.5;margin-bottom:6px}
+  .kitchen-alert .ka-meta{font-size:12px;color:#E8DACA;margin-bottom:12px}
+  .kitchen-alert .btn-row .btn{border-color:rgba(255,255,255,.35);color:#FFFDF9;background:transparent}
+  .kitchen-alert .btn-row .btn.primary{background:var(--accent);border-color:var(--accent)}
+  @keyframes kaPulse{0%,100%{box-shadow:0 14px 40px rgba(42,27,18,.45)}50%{box-shadow:0 0 0 8px rgba(201,142,82,.28),0 14px 40px rgba(42,27,18,.45)}}
   .receipt{background:#fff;color:#111;border:1px solid var(--line);padding:16px;font-size:12px;line-height:1.5}
   .receipt .rh{text-align:center;border-bottom:1px dashed #999;padding-bottom:8px;margin-bottom:8px}
   .receipt .rh b{font-family:Georgia,serif;font-size:17px}
@@ -172,7 +181,7 @@
 </style>
 <script>
 (function(){
-  var BUILD='v2026-11-28-1335';window.__BUILD=BUILD;
+  var BUILD='v2026-11-28-1405';window.__BUILD=BUILD;
   function stamp(){var el=document.getElementById('buildTag');if(el)el.textContent=BUILD}
   function check(){
     fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
@@ -360,12 +369,18 @@
 
 <button id="mobileCartBtn" type="button">View order</button>
 
+<div id="kitchenAlert" class="kitchen-alert" role="alert" hidden>
+  <div class="ka-top"><b>NEW ORDER</b><span id="kaNum">#000</span></div>
+  <div class="ka-items" id="kaItems"></div>
+  <div class="ka-meta" id="kaMeta"></div>
+  <div class="btn-row"><button class="btn primary" id="kaView" type="button">View in kitchen</button><button class="btn" id="kaDismiss" type="button">Dismiss</button></div>
+</div>
+
 <div class="overlay" id="addOverlay" hidden><div class="sheet">
   <div class="sheet-head"><h2 id="addName">Item</h2><button class="close-x" data-close="addOverlay" type="button">×</button></div>
   <div class="big-amount" id="addPrice">₱0</div>
   <div class="form-row"><div><label>Quantity</label><div class="stepper"><button id="addDec" type="button">−</button><span id="addQty">1</span><button id="addInc" type="button">+</button></div></div></div>
-  <div class="form-row" id="addSizeRow"><div><label>Size</label><select id="addSize"><option value="12">12 oz</option><option value="16">16 oz (+₱10)</option></select></div></div>
-  <div class="form-row"><div><label>Variant</label><select id="addVariant"><option value="">Default</option><option>Hot</option><option>Iced</option></select></div></div>
+  <div class="form-row" id="addVariantRow"><div><label>Temperature</label><select id="addVariant"><option value="">Default</option><option value="Hot">Hot</option><option value="Iced">Iced</option></select></div></div>
   <div class="form-row"><div><label>Item note</label><input id="addNote" placeholder="e.g. less sugar"></div></div>
   <div class="form-row"><div><label>Item discount</label><div style="display:flex;gap:6px"><input id="addDisc" type="number" min="0" step="0.25" placeholder="0"><select id="addDiscType" style="width:auto"><option value="pct">%</option><option value="amt">₱</option></select></div></div></div>
   <div class="btn-row"><button class="btn primary" id="addConfirm" type="button" style="flex:1;min-height:48px">Add to order</button></div>
@@ -497,38 +512,38 @@ var SB_TOPIC='realtime:qookie-orders';
 var SB_QKU='b74f06cf-0b89-4af2-9b5a-bc9d62d0bd53',SB_QREF='m4kydkh7qwbe';
 var sbAt='',sbAtExp=0;
 var CATALOG=[
-  {id:"americano",name:"Americano",cat:"coffee",price:90,alt:110,img:"assets/photos/coffee-iced.jpg",unit:"12 oz · hot/iced",desc:"Espresso and water. Clean and strong."},
-  {id:"cappuccino",name:"Cappuccino",cat:"coffee",price:100,alt:120,img:"assets/photos/coffee-latte.jpg",unit:"12 oz · hot/iced",desc:"Espresso, steamed milk, and thick foam."},
-  {id:"cafe-mocha",name:"Café Mocha",cat:"coffee",price:120,alt:140,img:"assets/photos/coffee-latte.jpg",unit:"12 oz · hot/iced",desc:"Espresso, chocolate, and steamed milk."},
-  {id:"hazelnut-mocha",name:"Hazel Nut Mocha",cat:"coffee",price:120,alt:140,img:"assets/photos/coffee-latte.jpg",unit:"12 oz · hot/iced",desc:"Mocha with roasted hazelnut."},
-  {id:"salted-caramel-latte",name:"Salted Caramel Latte",cat:"coffee",price:100,alt:120,img:"assets/photos/coffee-table.jpg",unit:"12 oz · hot/iced",desc:"Caramel, sea salt, espresso, and milk."},
-  {id:"caramel-macchiato",name:"Caramel Macchiato",cat:"coffee",price:100,alt:120,img:"assets/photos/coffee-table.jpg",unit:"12 oz · hot/iced",desc:"Vanilla milk, espresso, and caramel drizzle."},
-  {id:"spanish-latte",name:"Spanish Latte",cat:"coffee",price:100,alt:120,img:"assets/photos/coffee-iced.jpg",unit:"12 oz · hot/iced",desc:"Espresso with condensed milk."},
-  {id:"dirty-matcha-latte",name:"Dirty Matcha Latte",cat:"coffee",price:160,alt:120,img:"assets/photos/matcha.jpg",unit:"12 oz · hot/iced",desc:"Matcha and espresso over milk."},
-  {id:"toffee-nut",name:"Toffee Nut",cat:"coffee",price:160,alt:180,img:"assets/photos/coffee-latte.jpg",unit:"12 oz · hot/iced",desc:"Toffee nut syrup, espresso, and milk."},
-  {id:"biscoff-latte",name:"Biscoff Latte",cat:"coffee",price:160,alt:180,img:"assets/photos/coffee-latte.jpg",unit:"12 oz · hot/iced",desc:"Biscoff spread, espresso, and milk."},
-  {id:"signature-hot-chocolate",name:"Signature Hot Chocolate",cat:"noncoffee",price:140,img:"assets/photos/chocolate.jpg",unit:"1 cup",desc:"Thick dark chocolate and steamed milk."},
-  {id:"green-tea-matcha-latte",name:"Green Tea Matcha Latte",cat:"noncoffee",price:160,img:"assets/photos/matcha.jpg",unit:"1 cup",desc:"Stone-ground matcha and milk."},
-  {id:"butterscotch-latte",name:"Butterscotch Latte",cat:"bestseller",price:190,img:"assets/photos/coffee-latte.jpg",unit:"1 glass",desc:"Butterscotch, espresso, and milk."},
-  {id:"pandan-americano",name:"Pandan Americano",cat:"bestseller",price:150,img:"assets/photos/coffee-iced.jpg",unit:"1 glass",desc:"Pandan syrup, espresso, and water."},
-  {id:"popcorn-latte",name:"Popcorn Latte",cat:"bestseller",price:170,img:"assets/photos/coffee-latte.jpg",unit:"1 glass",desc:"Popcorn syrup, espresso, and milk."},
-  {id:"kasoy-latte",name:"Kasoy Latte",cat:"bestseller",price:180,img:"assets/photos/coffee-latte.jpg",unit:"1 glass",desc:"Cashew, espresso, and milk."},
-  {id:"vanilla-brulee-latte",name:"Vanilla Brûlée Latte",cat:"bestseller",price:140,img:"assets/photos/coffee-latte.jpg",unit:"1 glass",desc:"Vanilla custard, espresso, and milk."},
-  {id:"java-chip-frappuccino",name:"Java Chip Frappuccino",cat:"frappe",price:190,img:"assets/photos/frappe.jpg",unit:"1 glass",desc:"Blended ice, chocolate chips, and espresso."},
-  {id:"smores-frappuccino",name:"S'mores Frappuccino",cat:"frappe",price:190,img:"assets/photos/frappe.jpg",unit:"1 glass",desc:"Chocolate, marshmallow, and graham."},
-  {id:"green-tea-matcha-frappe",name:"Green Tea Matcha Frappe",cat:"frappe",price:190,img:"assets/photos/frappe.jpg",unit:"1 glass",desc:"Blended matcha, milk, and ice."},
-  {id:"caramel-popcorn-frappuccino",name:"Caramel Popcorn Frappuccino",cat:"frappe",price:190,img:"assets/photos/frappe.jpg",unit:"1 glass",desc:"Caramel popcorn, milk, and ice."},
-  {id:"blueberry-soda",name:"Blueberry Soda",cat:"refresher",price:120,img:"assets/photos/refresher.jpg",unit:"1 glass",desc:"Blueberry syrup, soda, and ice."},
-  {id:"raspberry-soda",name:"Raspberry Soda",cat:"refresher",price:120,img:"assets/photos/refresher.jpg",unit:"1 glass",desc:"Raspberry syrup, soda, and ice."},
-  {id:"lychee-soda",name:"Lychee Soda",cat:"refresher",price:120,img:"assets/photos/refresher.jpg",unit:"1 glass",desc:"Lychee syrup, soda, and ice."},
-  {id:"mt-cookies-cream",name:"Cookies and Cream",cat:"milktea",price:79,img:"assets/photos/coffee-iced.jpg",unit:"1 cup",desc:"Creamy milktea with cookie and cream."},
-  {id:"mt-matcha",name:"Matcha",cat:"milktea",price:79,img:"assets/photos/matcha.jpg",unit:"1 cup",desc:"Matcha milktea."},
-  {id:"mt-winter-melon",name:"Winter Melon",cat:"milktea",price:79,img:"assets/photos/coffee-iced.jpg",unit:"1 cup",desc:"Winter melon milktea."},
-  {id:"mt-mixed-berries",name:"Mixed Berries",cat:"milktea",price:79,img:"assets/photos/refresher.jpg",unit:"1 cup",desc:"Mixed berry milktea."},
-  {id:"mt-hazelnut",name:"Hazelnut",cat:"milktea",price:79,img:"assets/photos/coffee-latte.jpg",unit:"1 cup",desc:"Hazelnut milktea."},
-  {id:"mt-vanilla",name:"Vanilla",cat:"milktea",price:79,img:"assets/photos/coffee-latte.jpg",unit:"1 cup",desc:"Vanilla milktea."},
-  {id:"mt-salted-caramel",name:"Salted Caramel",cat:"milktea",price:79,img:"assets/photos/coffee-table.jpg",unit:"1 cup",desc:"Salted caramel milktea."},
-  {id:"mt-cheesecake",name:"Cheesecake",cat:"milktea",price:79,img:"assets/photos/cheesecake.jpg",unit:"1 cup",desc:"Cheesecake milktea."},
+  {id:"americano",name:"Americano",cat:"coffee",price:90,alt:110,img:"assets/photos/coffee-iced.jpg",unit:"",desc:"Espresso and water. Clean and strong."},
+  {id:"cappuccino",name:"Cappuccino",cat:"coffee",price:100,alt:120,img:"assets/photos/coffee-latte.jpg",unit:"",desc:"Espresso, steamed milk, and thick foam."},
+  {id:"cafe-mocha",name:"Café Mocha",cat:"coffee",price:120,alt:140,img:"assets/photos/coffee-latte.jpg",unit:"",desc:"Espresso, chocolate, and steamed milk."},
+  {id:"hazelnut-mocha",name:"Hazel Nut Mocha",cat:"coffee",price:120,alt:140,img:"assets/photos/coffee-latte.jpg",unit:"",desc:"Mocha with roasted hazelnut."},
+  {id:"salted-caramel-latte",name:"Salted Caramel Latte",cat:"coffee",price:100,alt:120,img:"assets/photos/coffee-table.jpg",unit:"",desc:"Caramel, sea salt, espresso, and milk."},
+  {id:"caramel-macchiato",name:"Caramel Macchiato",cat:"coffee",price:100,alt:120,img:"assets/photos/coffee-table.jpg",unit:"",desc:"Vanilla milk, espresso, and caramel drizzle."},
+  {id:"spanish-latte",name:"Spanish Latte",cat:"coffee",price:100,alt:120,img:"assets/photos/coffee-iced.jpg",unit:"",desc:"Espresso with condensed milk."},
+  {id:"dirty-matcha-latte",name:"Dirty Matcha Latte",cat:"coffee",price:160,alt:120,img:"assets/photos/matcha.jpg",unit:"",desc:"Matcha and espresso over milk."},
+  {id:"toffee-nut",name:"Toffee Nut",cat:"coffee",price:160,alt:180,img:"assets/photos/coffee-latte.jpg",unit:"",desc:"Toffee nut syrup, espresso, and milk."},
+  {id:"biscoff-latte",name:"Biscoff Latte",cat:"coffee",price:160,alt:180,img:"assets/photos/coffee-latte.jpg",unit:"",desc:"Biscoff spread, espresso, and milk."},
+  {id:"signature-hot-chocolate",name:"Signature Hot Chocolate",cat:"noncoffee",price:140,img:"assets/photos/chocolate.jpg",unit:"",desc:"Thick dark chocolate and steamed milk."},
+  {id:"green-tea-matcha-latte",name:"Green Tea Matcha Latte",cat:"noncoffee",price:160,img:"assets/photos/matcha.jpg",unit:"",desc:"Stone-ground matcha and milk."},
+  {id:"butterscotch-latte",name:"Butterscotch Latte",cat:"bestseller",price:190,img:"assets/photos/coffee-latte.jpg",unit:"",desc:"Butterscotch, espresso, and milk."},
+  {id:"pandan-americano",name:"Pandan Americano",cat:"bestseller",price:150,img:"assets/photos/coffee-iced.jpg",unit:"",desc:"Pandan syrup, espresso, and water."},
+  {id:"popcorn-latte",name:"Popcorn Latte",cat:"bestseller",price:170,img:"assets/photos/coffee-latte.jpg",unit:"",desc:"Popcorn syrup, espresso, and milk."},
+  {id:"kasoy-latte",name:"Kasoy Latte",cat:"bestseller",price:180,img:"assets/photos/coffee-latte.jpg",unit:"",desc:"Cashew, espresso, and milk."},
+  {id:"vanilla-brulee-latte",name:"Vanilla Brûlée Latte",cat:"bestseller",price:140,img:"assets/photos/coffee-latte.jpg",unit:"",desc:"Vanilla custard, espresso, and milk."},
+  {id:"java-chip-frappuccino",name:"Java Chip Frappuccino",cat:"frappe",price:190,img:"assets/photos/frappe.jpg",unit:"",desc:"Blended ice, chocolate chips, and espresso."},
+  {id:"smores-frappuccino",name:"S'mores Frappuccino",cat:"frappe",price:190,img:"assets/photos/frappe.jpg",unit:"",desc:"Chocolate, marshmallow, and graham."},
+  {id:"green-tea-matcha-frappe",name:"Green Tea Matcha Frappe",cat:"frappe",price:190,img:"assets/photos/frappe.jpg",unit:"",desc:"Blended matcha, milk, and ice."},
+  {id:"caramel-popcorn-frappuccino",name:"Caramel Popcorn Frappuccino",cat:"frappe",price:190,img:"assets/photos/frappe.jpg",unit:"",desc:"Caramel popcorn, milk, and ice."},
+  {id:"blueberry-soda",name:"Blueberry Soda",cat:"refresher",price:120,img:"assets/photos/refresher.jpg",unit:"",desc:"Blueberry syrup, soda, and ice."},
+  {id:"raspberry-soda",name:"Raspberry Soda",cat:"refresher",price:120,img:"assets/photos/refresher.jpg",unit:"",desc:"Raspberry syrup, soda, and ice."},
+  {id:"lychee-soda",name:"Lychee Soda",cat:"refresher",price:120,img:"assets/photos/refresher.jpg",unit:"",desc:"Lychee syrup, soda, and ice."},
+  {id:"mt-cookies-cream",name:"Cookies and Cream",cat:"milktea",price:79,img:"assets/photos/coffee-iced.jpg",unit:"",desc:"Creamy milktea with cookie and cream."},
+  {id:"mt-matcha",name:"Matcha",cat:"milktea",price:79,img:"assets/photos/matcha.jpg",unit:"",desc:"Matcha milktea."},
+  {id:"mt-winter-melon",name:"Winter Melon",cat:"milktea",price:79,img:"assets/photos/coffee-iced.jpg",unit:"",desc:"Winter melon milktea."},
+  {id:"mt-mixed-berries",name:"Mixed Berries",cat:"milktea",price:79,img:"assets/photos/refresher.jpg",unit:"",desc:"Mixed berry milktea."},
+  {id:"mt-hazelnut",name:"Hazelnut",cat:"milktea",price:79,img:"assets/photos/coffee-latte.jpg",unit:"",desc:"Hazelnut milktea."},
+  {id:"mt-vanilla",name:"Vanilla",cat:"milktea",price:79,img:"assets/photos/coffee-latte.jpg",unit:"",desc:"Vanilla milktea."},
+  {id:"mt-salted-caramel",name:"Salted Caramel",cat:"milktea",price:79,img:"assets/photos/coffee-table.jpg",unit:"",desc:"Salted caramel milktea."},
+  {id:"mt-cheesecake",name:"Cheesecake",cat:"milktea",price:79,img:"assets/photos/cheesecake.jpg",unit:"",desc:"Cheesecake milktea."},
   {id:"classic-chocolate-chip",name:"Classic Chocolate Chip",cat:"cookies",price:90,img:"assets/photos/cookies-chocolate.jpg",unit:"1 pc",desc:"Buttery cookie with chocolate chips."},
   {id:"chocolate-madness-cookie",name:"Chocolate Madness",cat:"cookies",price:95,img:"assets/photos/cookies-chocolate.jpg",unit:"1 pc",desc:"Double chocolate cookie."},
   {id:"red-velvet-cream-cheese",name:"Red Velvet Cream Cheese",cat:"cookies",price:95,img:"assets/photos/cookies-chocolate.jpg",unit:"1 pc",desc:"Red velvet cookie with cream cheese."},
@@ -582,6 +597,32 @@ function closeAll(){$$('.overlay').forEach(function(o){if(o.id!=='loginOverlay')
 function currentUser(){return state.users.find(function(u){return u.id===currentUserId})||null}
 function can(p){var u=currentUser();if(!u)return false;var list=PERMS[u.role]||[];return list.indexOf('*')>-1||list.indexOf(p)>-1}
 function audit(action,meta){state.audit.unshift({ts:new Date().toISOString(),userId:currentUserId,action:action,meta:meta||''});if(state.audit.length>800)state.audit.length=800}
+function kitchenBeep(){
+  try{
+    var C=window.AudioContext||window.webkitAudioContext;if(!C)return;
+    var ac=new C(),t=ac.currentTime;
+    [0,0.22].forEach(function(d){
+      var o=ac.createOscillator(),g=ac.createGain();
+      o.type='sine';o.frequency.setValueAtTime(880,t+d);
+      g.gain.setValueAtTime(0.0001,t+d);g.gain.exponentialRampToValueAtTime(0.35,t+d+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+d+0.16);
+      o.connect(g);g.connect(ac.destination);o.start(t+d);o.stop(t+d+0.18);
+    });
+    setTimeout(function(){ac.close()},1200);
+  }catch(e){}
+  try{if(navigator.vibrate)navigator.vibrate([250,120,250])}catch(e){}
+}
+function showKitchenAlert(o){
+  if(!o)return;
+  $('kaNum').textContent=pad(o.id);
+  $('kaItems').innerHTML=(o.items||[]).map(function(i){return esc(i.name)+' × '+num(i.qty)}).join(', ')||'—';
+  $('kaMeta').textContent=(o.customer?o.customer+' · ':'')+(o.mode||'')+(o.table?' · Table '+o.table:'')+(o.notes?' · '+o.notes:'');
+  $('kitchenAlert').hidden=false;
+  kitchenBeep();
+  clearTimeout(showKitchenAlert.timer);
+  showKitchenAlert.timer=setTimeout(function(){var el=$('kitchenAlert');if(el)el.hidden=true},45000);
+}
+function hideKitchenAlert(){var el=$('kitchenAlert');if(el)el.hidden=true;clearTimeout(showKitchenAlert.timer)}
 async function sbToken(){
   if(sbAt&&Date.now()<sbAtExp)return sbAt;
   var r=await fetch('https://vggaswbjsmyvfheofnnj.supabase.co/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:SB_QREF})});
@@ -785,9 +826,11 @@ function rtOnOrder(o){
   var c=clone(o);ensureUid(c);c.uid=uid;
   state.orders.unshift(c);state.seq=Math.max(state.seq||1,num(c.id)+1);
   save();renderOrders();renderProducts();
+  showKitchenAlert(c);
   toast('New order #'+String(c.id).padStart(3,'0'));
 }
-function lineBase(it){return (num(it.unit)+(num(it.size)===16?10:0))*num(it.qty)}
+function lineBase(it){return num(it.unit)*num(it.qty)}
+function itemUnit(p,variant){return variant==='Iced'&&p.alt!=null?num(p.alt):num(p.price)}
 function lineDisc(it){var b=lineBase(it);return it.discountType==='pct'?b*num(it.discount)/100:num(it.discount)}
 function lineNet(it){return lineBase(it)-lineDisc(it)}
 function cartSubtotal(){return cart.reduce(function(s,it){return s+lineBase(it)},0)}
@@ -813,7 +856,7 @@ function artFor(p){
   if(p.img)return p.img;
   return 'assets/coffee.svg';
 }
-function productLabel(p){return p.unit||(p.cat==='coffee'?'12 oz · hot/iced':'1 pc')}
+function productLabel(p){return p.unit||''}
 function renderCats(){
   var cats=[{id:'all',name:'All'}].concat((state.categories||[]).filter(function(c){return c.id!=='all'}));
   $('catStrip').innerHTML=cats.map(function(c){return '<button class="chip '+(activeCat===c.id?'on':'')+'" type="button" data-cat="'+esc(c.id)+'">'+esc(c.name)+'</button>'}).join('');
@@ -847,7 +890,7 @@ function renderPOS(){
   $('orderNotes').value=ticket.notes||'';
   $('cartLines').innerHTML=cart.length?cart.map(function(it,i){
     return '<div class="cart-line"><div><div class="lname">'+esc(it.name)+'</div><div class="lmeta">'+
-      money(it.unit)+' × '+num(it.qty)+(it.size?' · '+it.size+' oz':'')+(it.variant?' · '+esc(it.variant):'')+
+      money(it.unit)+' × '+num(it.qty)+(it.variant?' · '+esc(it.variant):'')+
       (it.note?' · '+esc(it.note):'')+(num(it.discount)?' · -'+money(lineDisc(it)):'')+'</div>'+
       '<div class="line-tools"><div class="stepper"><button type="button" data-line="dec" data-i="'+i+'">−</button><span>'+num(it.qty)+'</span><button type="button" data-line="inc" data-i="'+i+'">+</button></div>'+
       '<button type="button" data-line="edit" data-i="'+i+'">✎</button><button type="button" data-line="del" data-i="'+i+'">×</button></div></div>'+
@@ -932,7 +975,7 @@ function renderOrders(){
 function setOrderStatus(o,st){
   o.status=st;o.statusAt=new Date().toISOString();save();
   try{if(rtReady)rtRaw('broadcast',{event:'status',payload:{uid:o.uid,status:st,statusAt:o.statusAt}},'s'+Date.now())}catch(e){}
-  if(st==='done')sbSetStatus(o.uid,o.statusAt,'done').catch(function(){});
+  sbSetStatus(o.uid,o.statusAt,st).catch(function(){});
   audit('status '+st,o.uid);renderOrders();toast(pad(o.id)+' → '+st);
 }
 function renderProducts(){
@@ -1111,7 +1154,7 @@ function printArea(html,thermal){
 }
 function receiptHtml(o){
   var sh=state.shop;
-  var rows=(o.items||[]).map(function(i){return '<div class="rr"><span>'+esc(i.name)+(i.variant?' ('+esc(i.variant)+')':'')+(i.size?' '+i.size+'oz':'')+' × '+num(i.qty)+'</span><span>'+money((i.unit!=null?i.unit:num(i.price))*num(i.qty))+'</span></div>'}).join('');
+  var rows=(o.items||[]).map(function(i){return '<div class="rr"><span>'+esc(i.name)+(i.variant?' ('+esc(i.variant)+')':'')+' × '+num(i.qty)+'</span><span>'+money((i.unit!=null?i.unit:num(i.price))*num(i.qty))+'</span></div>'}).join('');
   return '<div class="receipt">'+(sh.logo?'<div class="rh"><img src="'+esc(sh.logo)+'" style="max-width:90px;max-height:70px"></div>':'')+
     '<div class="rh"><b>'+esc(sh.name)+'</b><br>'+esc(sh.header||'')+'</div>'+
     '<div class="rr"><span>'+new Date(o.ts).toLocaleString('en-PH')+'</span><span>'+pad(o.id)+'</span></div>'+
@@ -1189,7 +1232,7 @@ function completePayment(){
   if(paid<total-0.005){toast('Need '+money(total-paid)+' more');return}
   var session=activeSession(),nowTs=new Date().toISOString();
   var order={
-    id:state.seq,uid:newUid(),items:cart.map(function(it){return {name:it.name,cat:it.cat||'',price:num(it.unit),unit:num(it.unit+(num(it.size)===16?10:0)),size:it.size||null,variant:it.variant||null,note:it.note||'',discount:num(it.discount),discountType:it.discountType,qty:num(it.qty)}}),
+    id:state.seq,uid:newUid(),items:cart.map(function(it){return {name:it.name,cat:it.cat||'',price:num(it.unit),unit:num(it.unit),size:null,variant:it.variant||null,note:it.note||'',discount:num(it.discount),discountType:it.discountType,qty:num(it.qty)}}),
     total:num(total),profit:num(total-cartCost()),ts:nowTs,status:'done',statusAt:nowTs,
     customer:ticket.customer||'',customerId:ticket.customerId,source:'counter',
     mode:ticket.mode||'Dine in',notes:$('orderNotes').value.trim(),table:'',
@@ -1279,19 +1322,20 @@ function renderTicketList(){
 }
 function updateAdd(){
   if(!addTarget)return;
-  var unit=num(addTarget.price)+(addSize===16?10:0);
+  var unit=itemUnit(addTarget,addVariant);
   $('addName').textContent=addTarget.name;
   $('addPrice').textContent=money(unit*addQty);
   $('addQty').textContent=addQty;
-  $('addSizeRow').hidden=addTarget.cat!=='coffee'&&!addTarget.alt;
-  $('addSize').value=addSize;
+  $('addVariantRow').hidden=addTarget.alt==null;
+  $('addVariant').value=addTarget.alt!=null?(addVariant||'Hot'):'';
 }
 function confirmAdd(){
   if(!addTarget)return;
-  var unit=num(addTarget.price)+(addSize===16?10:0);
-  var found=cart.find(function(it){return it.id===addTarget.id&&it.size===(addSize===16?16:null)&&it.variant===addVariant&&it.note===$('addNote').value.trim()});
+  var unit=itemUnit(addTarget,addVariant);
+  var variant=addTarget.alt!=null?(addVariant==='Iced'?'Iced':'Hot'):null;
+  var found=cart.find(function(it){return it.id===addTarget.id&&it.variant===variant&&it.note===$('addNote').value.trim()&&num(it.unit)===unit});
   if(found)found.qty+=addQty;
-  else cart.push({id:addTarget.id,name:addTarget.name,cat:addTarget.cat,price:num(addTarget.price),unit:unit,size:addSize===16?16:null,variant:addVariant||null,qty:addQty,note:$('addNote').value.trim(),discount:num($('addDisc').value),discountType:$('addDiscType').value});
+  else cart.push({id:addTarget.id,name:addTarget.name,cat:addTarget.cat,price:num(addTarget.price),unit:unit,size:null,variant:variant,qty:addQty,note:$('addNote').value.trim(),discount:num($('addDisc').value),discountType:$('addDiscType').value});
   renderPOS();closeModal('addOverlay');toast(addTarget.name+' added');
 }
 function addFirstMatch(){
@@ -1301,14 +1345,17 @@ function addFirstMatch(){
   openAdd(p);
 }
 function openAdd(p){
-  addTarget=p;addQty=1;addSize=12;
-  $('addVariant').value='';$('addNote').value='';$('addDisc').value='';$('addDiscType').value='pct';
+  addTarget=p;addQty=1;
+  addVariant=p.alt!=null?'Hot':'';
+  $('addVariant').value=addVariant;$('addNote').value='';$('addDisc').value='';$('addDiscType').value='pct';
   updateAdd();openModal('addOverlay');
 }
 function on(id,ev,fn){var el=$(id);if(el)el.addEventListener(ev,fn)}
 on('loginForm','submit',function(e){e.preventDefault();doLogin()});
 on('logoutBtn','click',doLogout);
 on('helpBtn','click',function(){openModal('helpOverlay')});
+on('kaDismiss','click',hideKitchenAlert);
+on('kaView','click',function(){hideKitchenAlert();orderTab='incoming';setView('orders')});
 on('syncStatus','click',function(){setView('settings')});
 on('posSearch','input',renderPOS);
 on('posSearch','keydown',function(e){if(e.key==='Enter'){e.preventDefault();addFirstMatch()}});
@@ -1330,11 +1377,12 @@ on('cartLines','click',function(e){
   if(act==='inc')cart[i].qty++;
   else if(act==='dec'){cart[i].qty--;if(cart[i].qty<1)cart.splice(i,1)}
   else if(act==='del')cart.splice(i,1);
-  else if(act==='edit'){addTarget=cart[i];addQty=num(cart[i].qty);addSize=cart[i].size===16?16:12;$('addVariant').value=cart[i].variant||'';$('addNote').value=cart[i].note||'';$('addDisc').value=cart[i].discount||'';$('addDiscType').value=cart[i].discountType||'pct';updateAdd();cart.splice(i,1);openModal('addOverlay')}
+  else if(act==='edit'){addTarget=cart[i];addQty=num(cart[i].qty);addVariant=cart[i].variant||'';$('addVariant').value=addVariant;$('addNote').value=cart[i].note||'';$('addDisc').value=cart[i].discount||'';$('addDiscType').value=cart[i].discountType||'pct';updateAdd();cart.splice(i,1);openModal('addOverlay')}
   renderPOS();
 });
 on('addDec','click',function(){if(addQty>1){addQty--;updateAdd()}});
 on('addInc','click',function(){addQty++;updateAdd()});
+on('addVariant','change',function(){addVariant=$('addVariant').value;updateAdd()});
 on('addConfirm','click',confirmAdd);
 on('discBtn','click',function(){$('discType').value=ticket.discountType;$('discValue').value=ticket.discount||'';openModal('discountOverlay')});
 on('applyDisc','click',function(){ticket.discountType=$('discType').value;ticket.discount=num($('discValue').value);closeModal('discountOverlay');renderPOS();toast('Discount applied')});
@@ -1538,6 +1586,9 @@ try{
   }
   if(!localStorage.getItem('qookie.catalog.v4')){
     syncCatalog();localStorage.setItem('qookie.catalog.v4','1');save();
+  }
+  if(!localStorage.getItem('qookie.catalog.v5')){
+    syncCatalog();localStorage.setItem('qookie.catalog.v5','1');save();
   }
 }catch(e){}
 renderAll();

@@ -221,6 +221,9 @@
   .ready-pop b{display:block;font-size:15px;letter-spacing:.06em;margin-bottom:4px}
   .ready-pop .btn{margin-top:10px;width:100%;background:var(--paper);color:var(--brown);border:0}
   .ready-pop button[aria-label]{position:absolute;top:6px;right:8px;background:none;border:0;color:#fff;font-size:20px;line-height:1;cursor:pointer}
+  .prep-pop{position:fixed;top:calc(14px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:94;width:min(92vw,360px);background:var(--brown);color:#fff;border:2px solid var(--paper);border-radius:16px;padding:13px 38px 13px 15px;box-shadow:0 10px 30px rgba(0,0,0,.28);font-size:13px;line-height:1.5;animation:slideUp .25s ease}
+  .prep-pop b{display:block;font-size:15px;letter-spacing:.06em;margin-bottom:3px}
+  .prep-pop button[aria-label]{position:absolute;top:5px;right:8px;background:none;border:0;color:#fff;font-size:20px;line-height:1;cursor:pointer}
   @keyframes slideUp{from{transform:translateY(18px);opacity:.5}to{transform:translateY(0);opacity:1}}
   @media (min-width:700px){
     body{padding-top:34px}
@@ -234,7 +237,7 @@
 </style>
 <script>
 (function(){
-  var BUILD='v2026-11-28-1335';window.__BUILD=BUILD;
+  var BUILD='v2026-11-28-1405';window.__BUILD=BUILD;
   function stamp(){var el=document.getElementById('buildTag');if(el)el.textContent=BUILD}
   function check(){
     fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
@@ -395,6 +398,11 @@
   </div>
 </div>
 
+<div id="prepPop" class="prep-pop" role="status" hidden>
+  <button id="prepPopClose" type="button" aria-label="Close">×</button>
+  <b>PREPARING YOUR ORDER</b>
+  <span id="prepPopText">—</span>
+</div>
 <div id="readyPop" class="ready-pop" role="alert" hidden>
   <button id="readyPopClose" type="button" aria-label="Close">×</button>
   <b>YOUR ORDER IS READY</b>
@@ -486,38 +494,38 @@
   }
 
   var MENU=[
-    {id:"americano",name:"Americano",cat:"coffee",price:90,iced:110,img:"assets/photos/coffee-iced.jpg",unitLabel:"12 oz · hot/iced",desc:"Espresso and water. Clean and strong."},
-    {id:"cappuccino",name:"Cappuccino",cat:"coffee",price:100,iced:120,img:"assets/photos/coffee-latte.jpg",unitLabel:"12 oz · hot/iced",desc:"Espresso, steamed milk, and thick foam."},
-    {id:"cafe-mocha",name:"Café Mocha",cat:"coffee",price:120,iced:140,img:"assets/photos/coffee-latte.jpg",unitLabel:"12 oz · hot/iced",desc:"Espresso, chocolate, and steamed milk."},
-    {id:"hazelnut-mocha",name:"Hazel Nut Mocha",cat:"coffee",price:120,iced:140,img:"assets/photos/coffee-latte.jpg",unitLabel:"12 oz · hot/iced",desc:"Mocha with roasted hazelnut."},
-    {id:"salted-caramel-latte",name:"Salted Caramel Latte",cat:"coffee",price:100,iced:120,img:"assets/photos/coffee-table.jpg",unitLabel:"12 oz · hot/iced",desc:"Caramel, sea salt, espresso, and milk."},
-    {id:"caramel-macchiato",name:"Caramel Macchiato",cat:"coffee",price:100,iced:120,img:"assets/photos/coffee-table.jpg",unitLabel:"12 oz · hot/iced",desc:"Vanilla milk, espresso, and caramel drizzle."},
-    {id:"spanish-latte",name:"Spanish Latte",cat:"coffee",price:100,iced:120,img:"assets/photos/coffee-iced.jpg",unitLabel:"12 oz · hot/iced",desc:"Espresso with condensed milk."},
-    {id:"dirty-matcha-latte",name:"Dirty Matcha Latte",cat:"coffee",price:160,iced:120,img:"assets/photos/matcha.jpg",unitLabel:"12 oz · hot/iced",desc:"Matcha and espresso over milk."},
-    {id:"toffee-nut",name:"Toffee Nut",cat:"coffee",price:160,iced:180,img:"assets/photos/coffee-latte.jpg",unitLabel:"12 oz · hot/iced",desc:"Toffee nut syrup, espresso, and milk."},
-    {id:"biscoff-latte",name:"Biscoff Latte",cat:"coffee",price:160,iced:180,img:"assets/photos/coffee-latte.jpg",unitLabel:"12 oz · hot/iced",desc:"Biscoff spread, espresso, and milk."},
-    {id:"signature-hot-chocolate",name:"Signature Hot Chocolate",cat:"noncoffee",price:140,img:"assets/photos/chocolate.jpg",unitLabel:"1 cup",desc:"Thick dark chocolate and steamed milk."},
-    {id:"green-tea-matcha-latte",name:"Green Tea Matcha Latte",cat:"noncoffee",price:160,img:"assets/photos/matcha.jpg",unitLabel:"1 cup",desc:"Stone-ground matcha and milk."},
-    {id:"butterscotch-latte",name:"Butterscotch Latte",cat:"bestseller",price:190,img:"assets/photos/coffee-latte.jpg",unitLabel:"1 glass",desc:"Butterscotch, espresso, and milk."},
-    {id:"pandan-americano",name:"Pandan Americano",cat:"bestseller",price:150,img:"assets/photos/coffee-iced.jpg",unitLabel:"1 glass",desc:"Pandan syrup, espresso, and water."},
-    {id:"popcorn-latte",name:"Popcorn Latte",cat:"bestseller",price:170,img:"assets/photos/coffee-latte.jpg",unitLabel:"1 glass",desc:"Popcorn syrup, espresso, and milk."},
-    {id:"kasoy-latte",name:"Kasoy Latte",cat:"bestseller",price:180,img:"assets/photos/coffee-latte.jpg",unitLabel:"1 glass",desc:"Cashew, espresso, and milk."},
-    {id:"vanilla-brulee-latte",name:"Vanilla Brûlée Latte",cat:"bestseller",price:140,img:"assets/photos/coffee-latte.jpg",unitLabel:"1 glass",desc:"Vanilla custard, espresso, and milk."},
-    {id:"java-chip-frappuccino",name:"Java Chip Frappuccino",cat:"frappe",price:190,img:"assets/photos/frappe.jpg",unitLabel:"1 glass",desc:"Blended ice, chocolate chips, and espresso."},
-    {id:"smores-frappuccino",name:"S'mores Frappuccino",cat:"frappe",price:190,img:"assets/photos/frappe.jpg",unitLabel:"1 glass",desc:"Chocolate, marshmallow, and graham."},
-    {id:"green-tea-matcha-frappe",name:"Green Tea Matcha Frappe",cat:"frappe",price:190,img:"assets/photos/frappe.jpg",unitLabel:"1 glass",desc:"Blended matcha, milk, and ice."},
-    {id:"caramel-popcorn-frappuccino",name:"Caramel Popcorn Frappuccino",cat:"frappe",price:190,img:"assets/photos/frappe.jpg",unitLabel:"1 glass",desc:"Caramel popcorn, milk, and ice."},
-    {id:"blueberry-soda",name:"Blueberry Soda",cat:"refresher",price:120,img:"assets/photos/refresher.jpg",unitLabel:"1 glass",desc:"Blueberry syrup, soda, and ice."},
-    {id:"raspberry-soda",name:"Raspberry Soda",cat:"refresher",price:120,img:"assets/photos/refresher.jpg",unitLabel:"1 glass",desc:"Raspberry syrup, soda, and ice."},
-    {id:"lychee-soda",name:"Lychee Soda",cat:"refresher",price:120,img:"assets/photos/refresher.jpg",unitLabel:"1 glass",desc:"Lychee syrup, soda, and ice."},
-    {id:"mt-cookies-cream",name:"Cookies and Cream",cat:"milktea",price:79,img:"assets/photos/coffee-iced.jpg",unitLabel:"1 cup",desc:"Creamy milktea with cookie and cream."},
-    {id:"mt-matcha",name:"Matcha",cat:"milktea",price:79,img:"assets/photos/matcha.jpg",unitLabel:"1 cup",desc:"Matcha milktea."},
-    {id:"mt-winter-melon",name:"Winter Melon",cat:"milktea",price:79,img:"assets/photos/coffee-iced.jpg",unitLabel:"1 cup",desc:"Winter melon milktea."},
-    {id:"mt-mixed-berries",name:"Mixed Berries",cat:"milktea",price:79,img:"assets/photos/refresher.jpg",unitLabel:"1 cup",desc:"Mixed berry milktea."},
-    {id:"mt-hazelnut",name:"Hazelnut",cat:"milktea",price:79,img:"assets/photos/coffee-latte.jpg",unitLabel:"1 cup",desc:"Hazelnut milktea."},
-    {id:"mt-vanilla",name:"Vanilla",cat:"milktea",price:79,img:"assets/photos/coffee-latte.jpg",unitLabel:"1 cup",desc:"Vanilla milktea."},
-    {id:"mt-salted-caramel",name:"Salted Caramel",cat:"milktea",price:79,img:"assets/photos/coffee-table.jpg",unitLabel:"1 cup",desc:"Salted caramel milktea."},
-    {id:"mt-cheesecake",name:"Cheesecake",cat:"milktea",price:79,img:"assets/photos/cheesecake.jpg",unitLabel:"1 cup",desc:"Cheesecake milktea."},
+    {id:"americano",name:"Americano",cat:"coffee",price:90,iced:110,img:"assets/photos/coffee-iced.jpg",unitLabel:"",desc:"Espresso and water. Clean and strong."},
+    {id:"cappuccino",name:"Cappuccino",cat:"coffee",price:100,iced:120,img:"assets/photos/coffee-latte.jpg",unitLabel:"",desc:"Espresso, steamed milk, and thick foam."},
+    {id:"cafe-mocha",name:"Café Mocha",cat:"coffee",price:120,iced:140,img:"assets/photos/coffee-latte.jpg",unitLabel:"",desc:"Espresso, chocolate, and steamed milk."},
+    {id:"hazelnut-mocha",name:"Hazel Nut Mocha",cat:"coffee",price:120,iced:140,img:"assets/photos/coffee-latte.jpg",unitLabel:"",desc:"Mocha with roasted hazelnut."},
+    {id:"salted-caramel-latte",name:"Salted Caramel Latte",cat:"coffee",price:100,iced:120,img:"assets/photos/coffee-table.jpg",unitLabel:"",desc:"Caramel, sea salt, espresso, and milk."},
+    {id:"caramel-macchiato",name:"Caramel Macchiato",cat:"coffee",price:100,iced:120,img:"assets/photos/coffee-table.jpg",unitLabel:"",desc:"Vanilla milk, espresso, and caramel drizzle."},
+    {id:"spanish-latte",name:"Spanish Latte",cat:"coffee",price:100,iced:120,img:"assets/photos/coffee-iced.jpg",unitLabel:"",desc:"Espresso with condensed milk."},
+    {id:"dirty-matcha-latte",name:"Dirty Matcha Latte",cat:"coffee",price:160,iced:120,img:"assets/photos/matcha.jpg",unitLabel:"",desc:"Matcha and espresso over milk."},
+    {id:"toffee-nut",name:"Toffee Nut",cat:"coffee",price:160,iced:180,img:"assets/photos/coffee-latte.jpg",unitLabel:"",desc:"Toffee nut syrup, espresso, and milk."},
+    {id:"biscoff-latte",name:"Biscoff Latte",cat:"coffee",price:160,iced:180,img:"assets/photos/coffee-latte.jpg",unitLabel:"",desc:"Biscoff spread, espresso, and milk."},
+    {id:"signature-hot-chocolate",name:"Signature Hot Chocolate",cat:"noncoffee",price:140,img:"assets/photos/chocolate.jpg",unitLabel:"",desc:"Thick dark chocolate and steamed milk."},
+    {id:"green-tea-matcha-latte",name:"Green Tea Matcha Latte",cat:"noncoffee",price:160,img:"assets/photos/matcha.jpg",unitLabel:"",desc:"Stone-ground matcha and milk."},
+    {id:"butterscotch-latte",name:"Butterscotch Latte",cat:"bestseller",price:190,img:"assets/photos/coffee-latte.jpg",unitLabel:"",desc:"Butterscotch, espresso, and milk."},
+    {id:"pandan-americano",name:"Pandan Americano",cat:"bestseller",price:150,img:"assets/photos/coffee-iced.jpg",unitLabel:"",desc:"Pandan syrup, espresso, and water."},
+    {id:"popcorn-latte",name:"Popcorn Latte",cat:"bestseller",price:170,img:"assets/photos/coffee-latte.jpg",unitLabel:"",desc:"Popcorn syrup, espresso, and milk."},
+    {id:"kasoy-latte",name:"Kasoy Latte",cat:"bestseller",price:180,img:"assets/photos/coffee-latte.jpg",unitLabel:"",desc:"Cashew, espresso, and milk."},
+    {id:"vanilla-brulee-latte",name:"Vanilla Brûlée Latte",cat:"bestseller",price:140,img:"assets/photos/coffee-latte.jpg",unitLabel:"",desc:"Vanilla custard, espresso, and milk."},
+    {id:"java-chip-frappuccino",name:"Java Chip Frappuccino",cat:"frappe",price:190,img:"assets/photos/frappe.jpg",unitLabel:"",desc:"Blended ice, chocolate chips, and espresso."},
+    {id:"smores-frappuccino",name:"S'mores Frappuccino",cat:"frappe",price:190,img:"assets/photos/frappe.jpg",unitLabel:"",desc:"Chocolate, marshmallow, and graham."},
+    {id:"green-tea-matcha-frappe",name:"Green Tea Matcha Frappe",cat:"frappe",price:190,img:"assets/photos/frappe.jpg",unitLabel:"",desc:"Blended matcha, milk, and ice."},
+    {id:"caramel-popcorn-frappuccino",name:"Caramel Popcorn Frappuccino",cat:"frappe",price:190,img:"assets/photos/frappe.jpg",unitLabel:"",desc:"Caramel popcorn, milk, and ice."},
+    {id:"blueberry-soda",name:"Blueberry Soda",cat:"refresher",price:120,img:"assets/photos/refresher.jpg",unitLabel:"",desc:"Blueberry syrup, soda, and ice."},
+    {id:"raspberry-soda",name:"Raspberry Soda",cat:"refresher",price:120,img:"assets/photos/refresher.jpg",unitLabel:"",desc:"Raspberry syrup, soda, and ice."},
+    {id:"lychee-soda",name:"Lychee Soda",cat:"refresher",price:120,img:"assets/photos/refresher.jpg",unitLabel:"",desc:"Lychee syrup, soda, and ice."},
+    {id:"mt-cookies-cream",name:"Cookies and Cream",cat:"milktea",price:79,img:"assets/photos/coffee-iced.jpg",unitLabel:"",desc:"Creamy milktea with cookie and cream."},
+    {id:"mt-matcha",name:"Matcha",cat:"milktea",price:79,img:"assets/photos/matcha.jpg",unitLabel:"",desc:"Matcha milktea."},
+    {id:"mt-winter-melon",name:"Winter Melon",cat:"milktea",price:79,img:"assets/photos/coffee-iced.jpg",unitLabel:"",desc:"Winter melon milktea."},
+    {id:"mt-mixed-berries",name:"Mixed Berries",cat:"milktea",price:79,img:"assets/photos/refresher.jpg",unitLabel:"",desc:"Mixed berry milktea."},
+    {id:"mt-hazelnut",name:"Hazelnut",cat:"milktea",price:79,img:"assets/photos/coffee-latte.jpg",unitLabel:"",desc:"Hazelnut milktea."},
+    {id:"mt-vanilla",name:"Vanilla",cat:"milktea",price:79,img:"assets/photos/coffee-latte.jpg",unitLabel:"",desc:"Vanilla milktea."},
+    {id:"mt-salted-caramel",name:"Salted Caramel",cat:"milktea",price:79,img:"assets/photos/coffee-table.jpg",unitLabel:"",desc:"Salted caramel milktea."},
+    {id:"mt-cheesecake",name:"Cheesecake",cat:"milktea",price:79,img:"assets/photos/cheesecake.jpg",unitLabel:"",desc:"Cheesecake milktea."},
     {id:"classic-chocolate-chip",name:"Classic Chocolate Chip",cat:"cookies",price:90,img:"assets/photos/cookies-chocolate.jpg",unitLabel:"1 pc",desc:"Buttery cookie with chocolate chips."},
     {id:"chocolate-madness-cookie",name:"Chocolate Madness",cat:"cookies",price:95,img:"assets/photos/cookies-chocolate.jpg",unitLabel:"1 pc",desc:"Double chocolate cookie."},
     {id:"red-velvet-cream-cheese",name:"Red Velvet Cream Cheese",cat:"cookies",price:95,img:"assets/photos/cookies-chocolate.jpg",unitLabel:"1 pc",desc:"Red velvet cookie with cream cheese."},
@@ -570,7 +578,7 @@
     var dl=$('dineLabel');if(dl)dl.textContent='Dine in · Table '+tableNo;
   }
   var detailId=null,detailVariant=null,detailQty=1;
-  var myUids=[],knownOrders=[],statusMap={},currentOrder=null,readyAck=[];
+  var myUids=[],knownOrders=[],statusMap={},currentOrder=null,readyAck=[],preparingAck=[];
   var pollBusy=false,sending=false,pollingStarted=false,toastTimer=null;
 
   function loadReady(){readyAck=[];try{localStorage.removeItem(READY_KEY)}catch(e){}}
@@ -619,7 +627,18 @@
     if(p.status)o.status=p.status;
     if(p.statusAt)o.statusAt=p.statusAt;
     if(currentOrder&&String(currentOrder.uid)===uid){currentOrder=o;saveMy();if(!$('ticket').hidden)renderTicket()}
+    if(o.status==='preparing')onPreparing(o);
     if(o.status==='done')onReady(o);
+  }
+  function onPreparing(order){
+    var uid=String(order&&order.uid||'');
+    if(!uid||preparingAck.indexOf(uid)!==-1)return;
+    preparingAck.push(uid);
+    var msg='Order '+pad(order.id)+' is being prepared';
+    try{$('prepPopText').textContent=msg+' — we will call you when it is ready.';$('prepPop').hidden=false}catch(e){}
+    toast(msg);
+    try{if(navigator.vibrate)navigator.vibrate([120,80,120])}catch(e){}
+    try{clearTimeout(onPreparing.timer);onPreparing.timer=setTimeout(function(){var el=$('prepPop');if(el)el.hidden=true},12000)}catch(e){}
   }
   function toast(msg){var t=$('toast');t.textContent=msg;t.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.hidden=true},2200)}
   function showView(name){
@@ -722,8 +741,8 @@
   }
   function cardHTML(p){
     var hasIced=p.iced!=null;
-    var meta=hasIced?('Hot '+money(p.price)+' · Iced '+money(p.iced)):(p.unitLabel||'1 pc');
-    var price=hasIced?money(p.iced):money(p.price);
+    var meta=hasIced?('Hot '+money(p.price)+' · Iced '+money(p.iced)):(p.unitLabel||'');
+    var price=hasIced?(money(p.price)+' / '+money(p.iced)):money(p.price);
     return '<div class="card" role="button" tabindex="0" data-open="'+esc(p.id)+'">'+
       '<div class="plate"><img src="'+heroFor(p)+'" alt="" loading="lazy"></div>'+
       '<div class="card-body"><span class="rating">'+esc(GROUPS[p.cat]||'Menu')+'</span>'+
@@ -770,7 +789,7 @@
     var unit=has?(detailVariant==='Iced'?num(p.iced):num(p.price)):num(p.price);
     $('detailPrice').textContent=money(unit);
     $('detailQty').textContent=detailQty;
-    $('detailUnit').textContent=has?detailVariant:(p.unitLabel||'1 pc');
+    $('detailUnit').textContent=has?detailVariant:(p.unitLabel||'');
     if(has){
       $('detailSizes').innerHTML=[['Hot',p.price],['Iced',p.iced]].map(function(v){
         var on=v[0]===detailVariant;
@@ -955,7 +974,7 @@
     var done=o.status==='done';
     $('tNum').textContent=pad(o.id);
     $('tWho').textContent='For '+(o.customer||'Guest')+(o.mode?' · '+o.mode:'')+(o.table?' · Table '+o.table:'');
-    $('tStatus').textContent=done?'READY':'IN THE QUEUE';
+    $('tStatus').textContent=done?'READY':(o.status==='preparing'?'PREPARING':(o.status==='ready'?'READY FOR PICKUP':'IN THE QUEUE'));
     $('tStatus').classList.toggle('is-ready',done);
     $('readyStamp').hidden=!done;
     $('readyBanner').hidden=!done;
@@ -998,6 +1017,7 @@
     fire();ringTimer=setInterval(fire,1200);
   }
   document.addEventListener('pointerdown',stopRing);
+  $('prepPopClose').addEventListener('click',function(){$('prepPop').hidden=true});
   $('readyPopClose').addEventListener('click',function(){$('readyPop').hidden=true;stopRing()});
   $('readyPopView').addEventListener('click',function(){$('readyPop').hidden=true;stopRing();showView('ticket');poll()});
   async function onReady(order,testMsg){
@@ -1047,6 +1067,7 @@
         var status=o.status||'pending';
         if(!Object.prototype.hasOwnProperty.call(statusMap,uid))statusMap[uid]=status;
         else statusMap[uid]=status;
+        if(status==='preparing')onPreparing(o);
         if(status==='done')onReady(o);
         if(currentOrder&&String(currentOrder.uid)===uid){
           currentOrder=o;saveMy();
@@ -1067,16 +1088,17 @@
       Object.keys(st||{}).forEach(function(uid){
         if(myUids.indexOf(uid)===-1)return;
         var s=st[uid];
-        if(!s||s.status!=='done')return;
+        if(!s||['preparing','ready','done'].indexOf(s.status)===-1)return;
         var o=null;
         if(currentOrder&&String(currentOrder.uid)===uid)o=currentOrder;
         for(var i=0;i<knownOrders.length;i++){if(String(knownOrders[i].uid)===uid){o=knownOrders[i];break}}
         if(!o)return;
-        if(o.status!=='done'){
-          o.status='done';o.statusAt=s.statusAt||o.statusAt;
+        if(o.status!==s.status){
+          o.status=s.status;o.statusAt=s.statusAt||o.statusAt;
           if(currentOrder&&String(currentOrder.uid)===uid){currentOrder=o;saveMy();if(!$('ticket').hidden)renderTicket()}
         }
-        onReady(o);
+        if(s.status==='preparing')onPreparing(o);
+        if(s.status==='done')onReady(o);
       });
     }).catch(function(e){lastSbInfo={at:Date.now(),ok:false,error:String(e&&e.message||e)}}).then(function(){statusBusy=false});
   }
