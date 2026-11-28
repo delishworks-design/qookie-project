@@ -172,7 +172,7 @@
 </style>
 <script>
 (function(){
-  var BUILD='v2026-11-28-1200';window.__BUILD=BUILD;
+  var BUILD='v2026-11-28-1230';window.__BUILD=BUILD;
   function stamp(){var el=document.getElementById('buildTag');if(el)el.textContent=BUILD}
   function check(){
     fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
@@ -504,7 +504,7 @@ var CATALOG=[
   {id:"salted-caramel-latte",name:"Salted Caramel Latte",cat:"coffee",price:100,alt:120,img:"assets/photos/coffee-table.jpg",unit:"12 oz · hot/iced",desc:"Caramel, sea salt, espresso, and milk."},
   {id:"caramel-macchiato",name:"Caramel Macchiato",cat:"coffee",price:100,alt:120,img:"assets/photos/coffee-table.jpg",unit:"12 oz · hot/iced",desc:"Vanilla milk, espresso, and caramel drizzle."},
   {id:"spanish-latte",name:"Spanish Latte",cat:"coffee",price:100,alt:120,img:"assets/photos/coffee-iced.jpg",unit:"12 oz · hot/iced",desc:"Espresso with condensed milk."},
-  {id:"dirty-matcha-latte",name:"Dirty Matcha Latte",cat:"coffee",price:120,alt:120,img:"assets/photos/matcha.jpg",unit:"12 oz · hot/iced",desc:"Matcha and espresso over milk."},
+  {id:"dirty-matcha-latte",name:"Dirty Matcha Latte",cat:"coffee",price:160,alt:120,img:"assets/photos/matcha.jpg",unit:"12 oz · hot/iced",desc:"Matcha and espresso over milk."},
   {id:"toffee-nut",name:"Toffee Nut",cat:"coffee",price:160,alt:180,img:"assets/photos/coffee-latte.jpg",unit:"12 oz · hot/iced",desc:"Toffee nut syrup, espresso, and milk."},
   {id:"biscoff-latte",name:"Biscoff Latte",cat:"coffee",price:160,alt:180,img:"assets/photos/coffee-latte.jpg",unit:"12 oz · hot/iced",desc:"Biscoff spread, espresso, and milk."},
   {id:"signature-hot-chocolate",name:"Signature Hot Chocolate",cat:"noncoffee",price:140,img:"assets/photos/chocolate.jpg",unit:"1 cup",desc:"Thick dark chocolate and steamed milk."},
@@ -973,14 +973,22 @@ function saveProductForm(){
   else{state.products.push(Object.assign({id:'p-'+newUid(),priceLists:[],history:[]},data));audit('product add',name)}
   save();renderProducts();renderPOS();closeModal('productOverlay');toast('Product saved');
 }
-function importCatalog(){
-  var added=0,updated=0;
+function syncCatalog(){
+  var removed=0,added=0,updated=0;
+  state.products=state.products.filter(function(p){
+    if(/^(c-|k-)/.test(String(p.id))){removed++;return false}
+    return true;
+  });
   CATALOG.forEach(function(c){
     var cur=state.products.find(function(p){return p.id===c.id});
-    if(cur){Object.assign(cur,{name:c.name,cat:c.cat,price:c.price,alt:c.alt,img:c.img,unit:c.unit,desc:c.desc,group:c.cat,active:true});updated++;return}
+    if(cur){Object.assign(cur,{name:c.name,cat:c.cat,price:c.price,alt:c.alt,img:c.img,unit:c.unit,desc:c.desc||cur.desc,group:c.cat,active:true});updated++;return}
     state.products.push(Object.assign({},c,{sku:'',barcode:'',cost:0,mrp:0,stockQty:null,trackStock:false,lowStockAt:state.shop.lowStock,priceLists:[],history:[],group:c.cat,active:true}));added++;
   });
-  save();renderProducts();renderPOS();toast('Catalog updated · '+added+' added, '+updated+' refreshed');
+  return {removed:removed,added:added,updated:updated};
+}
+function importCatalog(){
+  var r=syncCatalog();
+  save();renderProducts();renderPOS();toast('Catalog updated · '+r.added+' added, '+r.updated+' refreshed'+(r.removed?', '+r.removed+' old items removed':''));
 }
 function customerCredit(c){return num((c.ledger||[]).reduce(function(s,l){return s+(l.type==='credit'?num(l.amount):-num(l.amount))},0))}
 function renderCustomers(){
@@ -1510,6 +1518,9 @@ try{
   if(!localStorage.getItem('qookie.sales.cleared')){
     state.orders=[];state.deleted=[];state.tickets=[];state.cashSessions=[];state.stockLogs=[];state.audit=[];
     state.clearedAt=Date.now();localStorage.setItem('qookie.sales.cleared','1');save();
+  }
+  if(!localStorage.getItem('qookie.catalog.v2')){
+    syncCatalog();localStorage.setItem('qookie.catalog.v2','1');save();
   }
 }catch(e){}
 renderAll();
