@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2A1B12">
+<title>KAPEtid — Barista</title>
+<style>
+  :root{--bg:#F6EFE5;--paper:#FFFDF9;--ink:#2A1B12;--muted:#8A7462;--line:#E8DED1;--accent:#C98E52;--ok:#5A7A4A;--info:#3B6E8C;--warn:#B45309}
+  *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+  button,input{font:inherit;color:inherit}button{cursor:pointer}[hidden]{display:none!important}
+  .bar{position:sticky;top:0;z-index:20;background:var(--ink);color:#FFFDF9;padding:12px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .bar b{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-weight:700;font-size:22px;letter-spacing:-.04em}
+  .bar small{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#C9B7A4}
+  .bar .spacer{flex:1}
+  .pill{background:var(--accent);color:#FFFDF9;border:0;border-radius:999px;padding:8px 14px;font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+  main{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(300px,.75fr);gap:14px;padding:14px;align-items:start}
+  .col{min-width:0}
+  .tabs{display:flex;gap:8px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px}
+  .tab{min-height:44px;padding:0 18px;border:1px solid var(--line);background:var(--paper);border-radius:999px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+  .tab.on{background:var(--ink);border-color:var(--ink);color:#FFFDF9}
+  .order{background:var(--paper);border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:12px;padding:14px;margin-bottom:10px}
+  .order.new{border-left-color:var(--warn)}.order.preparing{border-left-color:var(--info)}.order.ready{border-left-color:var(--ok)}
+  .order-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .num{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-weight:700;font-size:24px;letter-spacing:-.04em}
+  .tag{font-size:11px;padding:3px 9px;border-radius:999px;border:1px solid var(--line);text-transform:uppercase;letter-spacing:.06em}
+  .tag.new{background:#FBF0DF;color:var(--warn);border-color:#EBD3A9}
+  .tag.preparing{background:#E6F0F5;color:var(--info);border-color:#C6DBE6}
+  .tag.ready{background:#EAF1E5;color:var(--ok);border-color:#CBDDC0}
+  .items{font-size:15px;line-height:1.6;margin:10px 0}
+  .meta{font-size:12px;color:var(--muted);margin-bottom:10px}
+  .acts{display:flex;gap:8px;flex-wrap:wrap}
+  .acts button{min-height:42px;padding:0 14px;border:1px solid var(--line);border-radius:9px;background:var(--paper);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+  .acts button.go{background:var(--accent);border-color:var(--accent);color:#FFFDF9}
+  .acts button.done{background:var(--ink);border-color:var(--ink);color:#FFFDF9}
+  .panel{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px;position:sticky;top:70px;max-height:calc(100dvh - 86px);overflow-y:auto}
+  .panel h2{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-weight:700;font-size:21px;margin:0 0 10px}
+  #recipeSearch{width:100%;min-height:44px;border:1px solid var(--line);border-radius:10px;padding:0 12px;margin-bottom:10px;font-size:15px}
+  .chips{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px}
+  .chip{min-height:36px;padding:0 12px;border:1px solid var(--line);background:var(--paper);border-radius:999px;font-size:12px;white-space:nowrap}
+  .chip.on{background:var(--ink);border-color:var(--ink);color:#FFFDF9}
+  .recipe{white-space:pre-wrap;font-size:13px;line-height:1.7;background:var(--bg);border-radius:10px;padding:12px;margin-top:10px}
+  .rlist{display:flex;flex-wrap:wrap;gap:6px}
+  .rlist button{min-height:36px;padding:0 10px;border:1px solid var(--line);background:var(--paper);border-radius:8px;font-size:12px}
+  .rlist button.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--paper));font-weight:700}
+  #toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:#FFFDF9;padding:10px 18px;border-radius:999px;font-size:13px;z-index:60}
+  @media(max-width:850px){main{grid-template-columns:1fr}.panel{position:static;max-height:none}.bar b{font-size:19px}}
+</style>
+</head>
+<body>
+<div class="bar"><b>KAPEtid</b><small>Barista</small><span class="spacer"></span><span id="clock" style="font-size:12px"></span><button class="pill" id="refresh" type="button">Refresh</button></div>
+<main>
+  <div class="col">
+    <div class="tabs" id="tabs">
+      <button class="tab on" type="button" data-tab="new">New</button>
+      <button class="tab" type="button" data-tab="preparing">Preparing</button>
+      <button class="tab" type="button" data-tab="ready">Ready</button>
+      <button class="tab" type="button" data-tab="done">Done</button>
+    </div>
+    <div id="orders"></div>
+  </div>
+  <div class="col">
+    <div class="panel">
+      <h2>Recipes</h2>
+      <input id="recipeSearch" placeholder="Find a drink…">
+      <div class="chips" id="chips">
+        <button class="chip on" type="button" data-cat="all">All</button>
+        <button class="chip" type="button" data-cat="coffee">Coffee</button>
+        <button class="chip" type="button" data-cat="noncoffee">Non-Coffee</button>
+        <button class="chip" type="button" data-cat="bestseller">Best Seller</button>
+        <button class="chip" type="button" data-cat="frappe">Frappe</button>
+        <button class="chip" type="button" data-cat="refresher">Refresher</button>
+      </div>
+      <div class="rlist" id="rlist"></div>
+      <div class="recipe" id="recipe">Tap a drink to see its procedure.</div>
+    </div>
+  </div>
+</main>
+<div id="toast" hidden></div>
+<script>
+(function(){
+'use strict';
+var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnZ2Fzd2Jqc215dmZoZW9mbm5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE2MzU5MDgsImV4cCI6MjEwNzIxMTkwOH0.5iV_nWSia3LaKSjTqoQtb8e3ZcAvJd8K3Vhg8b9Dwx4';
+var SB_QKU='b74f06cf-0b89-4af2-9b5a-bc9d62d0bd53',SB_QREF='m4kydkh7qwbe';
+var RAW='https://raw.githubusercontent.com/delishworks-design/qookie-project-data/main/data.json';
+var PROCEDURES={
+ "americano": [
+  "HOT AMERICANO\nESPRESSO SHOT\nRATIO:\n200 ML water\nDouble shot Espresso\n12 OZ cup\nPour the 40 ML of Espresso in a cup of hot water and stir.\nFor sweetness, add sugar sachet\n16OZ\nRATIO:\n250 ML water\nLungo Shot\n16 OZ cup\nPour the 60ML Lungo Shot in a cup of hot water and stir\nFor sweetness, add sugar sachet\n12 oz Cup",
+  "ICED AMERICANO\nESPRESSO SHOT\nRATIO:\nFull Cup Iced\n150 ml water\nDouble shot Espresso\n16 OZ cup\n1 full cup of ice, water and last is the 40ML espresso shot\nFor sugar, add sugar sachet\n22OZ LUNGO SHOT\nRATIO:\nFull Cup Iced\n200ml water\n60ML Lungo Shot\n22 oz cup\n1 full cup of ice,water and last is the 60ML Lungo Shot\nFor sugar, add sugar sachet\n16oz Cup"
+ ],
+ "cappuccino": [
+  "CAPPUCCINO\nESPRESSO SHOT\nRATIO:\n200 ML Steamed Milk\n40ML Double shot Espresso\n12 OZ cup\nPut the espresso shot in a cup and pour the steamed milk with foam\nFor sweetness, add sugar sachet\n16OZ LUNGO SHOT\nRATIO:\n200 ML Full Cream Milk\n60ML Lungo Shot\n12 OZ cup\nPut the Lungo Shot in a cup and pour the steamed milk with foam\nFor sweetness, add sugar sachet\n12 oz Cup",
+  "LATTE\nESPRESSO SHOT\nRATIO:\n150 ML Full Cream milk\nDouble shot Espresso\n16 OZ cup\nFull Cup Ice\n1 Full Cup of Ice, Milk in cup, and pour the Espresso Shot, last stir well\nICED\nLUNGO SHOT\nRATIO:\n150 ML Full Cream milk\n60ML Lungo Shot\n22 OZ cup\nFull Cup Ice\n1 Full Cup of Ice, Milk in cup, and pour the Espresso Shot, last stir well\n16oz Cup"
+ ],
+ "cafe-mocha": [
+  "CAFE MOCHA\nESPRESSO SHOT\nRATIO:\n180-200 ML steamed milk\nDouble shot Espresso\n30ML Chocolate Sauce (2 pumps)\n12 OZ cup\nPut the espresso with 30ML Chocolate Sauce in a Shot glass, stir well. Then, pour it into a\ncup and top it with steamed milk with foam.\nHOT\n16OZ LUNGO SHOT\nRATIO:\n180-200 ML steamed milk\n60ML Lungo Shot\n30 ML Chocolate Sauce (2pumps)\n16 OZ cup\nPut the Lungo Shot with 20ML Chocolate Sauce in a Shot glass, stir well. Then, pour it\ninto a cup and top it with steamed milk with foam.\n12 oz Cup",
+  "CAFE MOCHA\nESPRESSO SHOT\nRATIO:\n150 ML Full Cream milk\nDouble shot Espresso\n30 ML Chocolate Sauce (2pumps)\n16 OZ cup\nFull Cup Ice\n1 Full Cup of Ice, Milk in cup, and pour the Espresso Shot with 30 ML Chocolate Sauce in shot\nglass, last stir well\nICED\n22OZ LUNGO SHOT\nRATIO:\n150 ML Full Cream milk\n60ML Lungo Shot\n30 ML Chocolate Sauce (2pumps)\n22 OZ cup\nFull Cup Ice\n1 Full Cup of Ice, Milk in cup, and pour the Lungo Shot with 40 ML Chocolate Sauce in shot\nglass, last stir well\n16oz Cup"
+ ],
+ "hazelnut-mocha": [
+  "HAZELNUT MOCHA\nESPRESSO SHOT\nRATIO:\n180-200 ML steamed milk\nDouble shot Espresso\n30ML Chocolate Sauce (2 pumps)\n7.5 Hazelnut Syrup (1 pump)\n12 OZ cup\nPut the espresso with 30ML Chocolate Sauce and 7.5 ML hazelnut syrup in a Shot glass,\nstir well. Then, pour it into a cup and top it with steamed milk with foam.\nHOT\n12 oz Cup",
+  "HAZELNUT\nMOCHA LATTE\nESPRESSO SHOT\nRATIO:\n150 ML Full Cream Milk\nDouble Shot Espresso\n30 ML Chocolate Sauce (2 pump)\n7.5 ML Hazelnut Syrup (1 pumps )\n16 OZ cup\nFull cup of ice\nPut the Espresso Shot with 15 ML Chocolate Sauce and 7.5 ML of Hazelnut Syrup in a Shot\nGlass, Stir well. Then , pour it into a cup with steamed milk and foam, and Drizzle Chocolate\non top.\nICE\n22OZ LUNGO SHOT\nRATIO:\n150 ML Full Cream Milk\n60 ML Lungo Shot\n30 ML Chocolate Sauce (1pump)\n7.5ML Hazelnut Syrup (1 pumps )\n22 OZ cup\nFull Cup of ice\nPut the Espresso Shot with 30ML Chocolate Sauce and 15ML of Hazelnut Syrup in a Shot\nGlass, Stir well. Then , pour it into a cup with steamed milk and foam, and Drizzle Chocolate\non top.\n16oz Cup"
+ ],
+ "salted-caramel-latte": [
+  "SALTED\nCARAMEL LATTE\nESPRESSO SHOT\nRATIO:\n180 to 200 ML steamed milk\nDouble shot Espresso\n30 ML Salted Caramel Sauce (2pumps)\n12 OZ cup\nPut the espresso with 30 ML Salted Caramel Sauce in a Shot glass stir well put it in a cup and\npour the steamed milk with foam\nHOT\n16OZ LUNGO SHOT\nRATIO:\n180 to 200 ML steamed milk\n60ML Lungo Shot\n30 ML Salted Caramel Sauce (2pumps)\n16 OZ cup\nPut the Lungo Shot with 30 ML Salted Caramel Sauce in a Shot glass stir well put it in a cup\nand pour the steamed milk with foam\n12 oz Cup",
+  "SALTED CARAMEL\nLATTE\nESPRESSO SHOT\nRATIO:\n150 ML Full Cream milk\nDouble shot Espresso\n30 ML Salted Caramel Sauce (2pumps)\n16 OZ cup\nFull Cup Ice\n1 Full Cup of Ice, Milk in cup, and pour the Espresso Shot with 30 ML Salted Caramel Sauce in\nshot glass, last stir well\nICED\n22OZ LUNGO SHOT\nRATIO:\n150 ML Full Cream milk\nLungo Shot\n30 ML Salted Caramel Sauce (2pumps)\n22 OZ cup\nFull Cup Ice\n1 Full Cup of Ice, Milk in cup, and pour the Lungo Shot with 30 ML Salted Caramel Sauce in\nshot glass, last stir well\n16oz Cup"
+ ],
+ "caramel-macchiato": [
+  "CARAMEL\nMACCHIATO\nESPRESSO SHOT\nRATIO:\n180 to 200 ML steamed milk\nDouble shot Espresso\n15 ML Caramel Sauce (1pump)\n7.5 ML Vanilla Syrup (1pumps)\n12 OZ cup\nPut the Espresso Shot with 15 ML Caramel Sauce and 7.5 ml Vanilla Syrup in a Shot Glass, Stir\nwell. Then , pour it into a cup with steamed milk and foam, and Drizzle caramel on top.\nHOT\n16 OZ LUNGO SHOT\nRATIO:\n180 to 200 ML steamed milk\nLungo Shot\n15 ML Caramel Sauce (1pump)\n7.5 ML Vanilla Syrup (1pumps)\n16 OZ cup\nPut the Espresso Shot with 15 ML Caramel Sauce and 7.5 ML Vanilla Syrup in a Shot Glass,\nStir well. Then , pour it into a cup with steamed milk and foam, and Drizzle caramel on top.\n12 oz Cup"
+ ],
+ "spanish-latte": [
+  "SPANISH\nLATTE\nESPRESSO SHOT\nRATIO:\n180 to 200 ML steamed milk\nDouble shot Espresso\n30 ML Condensed Milk\n12 OZ cup\nPut the espresso with 30 ML Condensed Milk in a Shot glass stir well put it in a cup and pour\nthe steamed milk with foam\nHOT\nLUNGO SHOT\nRATIO:\n180 to 200 ML steamed milk\nLungo Shot\n30 ML Condensed Milk\n16 OZ cup\nPut the Lungo Shot with 30 ML Condensed Milk in a Shot glass stir well put it in a cup and\npour the steamed milk with foam\n12 oz Cup",
+  "SPANISH\nLATTE\nESPRESSO SHOT\nRATIO:\n120 ML Full Cream milk\nDouble shot Espresso\n30 ML Creamy vanilla {2pumps}\n16 OZ cup\nFull Cup Ice\n1 Full Cup of Ice, Milk in cup, and pour the Espresso Shot with 30 ML of creamy vanilla in shot\nglass, last stir well\nICED\n22oz LUNGO SHOT\nRATIO:\n150 ML Full Cream milk\nLungo Shot\n30 ML Creamy vanilla {2pumps}\n16 OZ cup\nFull Cup Ice\n1 Full Cup of Ice, Milk in cup, and pour the Lungo Shot with 40 ML of of creamy vanilla in shot\nglass, last stir well\n16oz Cup"
+ ],
+ "dirty-matcha-latte": [
+  "DIRTY MATCHA\nMATCHA LATTE\n16 OZ CUP\nRATIO:\n120ml MILK\n15 grams Matcha (DAVINCI)\nOr\n4 grams Matcha (ceremonial)\n45 ml Hot Water\nIced\n16 OZ cup\nDouble shot Espresso\nOr\nSingle shot Espresso\n20ml White Chocolate or\nCondensed\nMix 45 ML Hot Water and 15 grams Matcha (DAVINCI) or 4 grams Matcha\n(CEREMONIAL) in a shot glass. In a Full cup of ice, pour the matcha and the milk\nfinish with espresso on top, then stir well.\n16oz Cup\nICED",
+  "DIRTY MATCHA\nMATCHA LATTE\n22 OZ CUP\nRATIO:\n150ml MILK\n30 grams Matcha (DAVINCI)\nOr\n4 grams Matcha (ceremonial)\n45 ml Hot Water\nIced\n16 OZ cup\nDouble shot Espresso\nOr\nSingle shot Espresso\n20ml White Chocolate or\nCondensed\nMix 45 ML Hot Water and 15 grams Matcha (DAVINCI) or 4 grams Matcha\n(CEREMONIAL) in a shot glass. In a Full cup of ice, pour the matcha and the milk\nfinish with espresso on top, then stir well.\n22oz Cup\nICED"
+ ],
+ "biscoff-latte": [
+  "ICED BISCOFF LATTE\nRATIO:\n150 ML Oatside\nDouble Shot Espresso\n10 G Mag Cream Cheese\n30G Biscoff sauce\n16oz Cup\nIce\nMix 30G Biscoff sauce and 10 G Cream Cheese, pour espresso shot and mix well.\nPut full cup of ice and pour 150ml oatside.\n16oz Cup\n16oz Cup"
+ ],
+ "signature-hot-chocolate": [
+  "SIGNATURE\nHOT CHOCOLATE\n12 OZ CUP\nRATIO:\n220 ML steamed milk\n45 ML Chocolate Sauce (3pumps)\n12 OZ cup\n16 OZ CUP\nMix 45 ML Hot milk and 45 ML Chocolate Sauce, Steam the Milk, pour the\nchocolate sauce and pour the steamed milk.\n12oz Cup\nRATIO:\n250 ML steamed milk\n45 ML Chocolate Sauce (3pumps)\n16 OZ cup"
+ ],
+ "green-tea-matcha-latte": [
+  "GREEN TEA\nMATCHA LATTE\n12 OZ CUP\nRATIO:\n220 ML steamed milk\n15 Grams Matcha Powder\nOr\n7 grams Matcha (Ceremonial)\n45 ml Hot Water\n12 OZ cup\n20 ml White Chocolate or\nCondensed\n22oz cup\nMix 45 ML Hot Water ,30 grams of matcha (DAVINCI) or7 Grams Matcha\nPowder(CEREMONIAL) , Steam the Milk, pour the flavor sauce and pour the\nsteamed milk.\n12oz Cup\nHOT\nRATIO:\n250 ML steamed milk\n30 Grams Matcha Powder\nOr\n7 grams Matcha (Ceremonial)\n45 ml Hot Water\n16 OZ cup\n20 ml White Chocolate or\nCondensed",
+  "ICED\nMATCHA OAT LATTE\n12oz Cup\n16 OZ\nRATIO:\n150 ML Oatmilk (Oatside)\n7 G Matcha powder\n16oz Cup\nIce\nMix 45 ML Hot Water and 7 grams Matcha Powder in a shot glass. Pour the\nmatcha and fill cup with ice and pour 250ml Oatmilk."
+ ],
+ "vanilla-brulee-latte": [
+  "VANILLA Brulee\nLATTE\nICED\n16oz Cup\nESPRESSO SHOT\nRATIO:\n50G Cream\n7.5 G Vanilla Syrup\n16 oz cup\nDouble Shot espresso\n150ML Oatside\nIce\n1 Full Cup of Ice, Milk in cup, and pour the Espresso Shot with 7.5 ML Vanilla Syrup in shot\nglass, last Froth 50 G APC and top with brown sugar and torch."
+ ],
+ "java-chip-frappuccino": [
+  "JAVA CHIP\nFRAPPUCCINO\n16 OZ cup\nRATIO:\n30G Chocolate Sauce (2 pumps)\nDouble shot Espresso\n30G Frappease Powder\n60 ML Milk\n16 OZ cup\nFull Cup Ice\n10 G Chocolate Chips\nWhipping Cream\nAdd all the Ingredients, blend for 35 seconds. Pour it into a cup and Drizzle\nwhipped cream then, sprinkle java chips on top.\n16oz Cup"
+ ],
+ "smores-frappuccino": [
+  "S’MORES\nFRAPPUCCINO\n12 OZ CUP\nRATIO:\n45 ML Chocolate sauce (3 pumps)\n30 Grams frappease powder\nFull Cup Ice\n100 ML Milk\n16 OZ cup\n30G Marshmallow\nWhipping Cream\nAdd all the Ingredients, blend for 35 seconds. Pour it into a cup and Drizzle\nwhipped cream then, sprinkle Graham on top and Burnt Mallow.\n16oz Cup"
+ ],
+ "caramel-popcorn-frappuccino": [
+  "CARAMEL\nPOPCORN\n(OPTIONAL)\n16 OZ CUP\nRATIO:\n30 G Salted Caramel Sauce\n30 Grams frappease powder\nFull Cup Ice\n100 ML Milk\n16 OZ cup\nSalted Caramel Popcorn\nWhipping Cream\nAdd all the Ingredients, blend for 35 seconds. Pour it into a cup and Drizzle\nwhipped cream then, sprinkle Popcorn.\n16oz Cup"
+ ],
+ "green-tea-matcha-frappe": [
+  "GREEN TEA MATCHA\nFRAPPE\n16 OZ cup\nRATIO:\n30G DVG Matcha Powder\n7.5ML Vanilla Syrup (1pump)\n30G Frappease Powder\n100 ML Milk\n16 OZ cup\nFull Cup Ice\nWhipping Cream\n180 php t 200 php\nAdd all the Ingredients and blend for 35 seconds. Drizzle whipped cream and\nsprinkle matcha powder on top.\n16oz Cup"
+ ],
+ "strawberry-soda": [
+  "STRAWBERRY\nSODA\n16 OZ CUP\nRATIO:\n22.5 ML Strawberry Syrup (3pumps)\n150-180ML Soda Water or Sprite\nFull Cup of Ice\n16oz Cup\nFull Cup of Ice, Mix Strawberry Syrup in Soda or Sprite, pour in a full cup of ice.\n16oz Cup"
+ ],
+ "ube-latte": [
+  "UBE LATTE\nRATIO:\n30G Ube Powder\n5ML Hot Water\nDouble Shot Espresso\n100ML Milk\nIce\n1 serving Ube Halaya\n50G APC\n16 oz cup\n16oz Cup\n16oz Cup"
+ ],
+ "matcha-biscoff-latte": [
+  "MATCHA BISCOFF\nLATTE RATIO:\n150 ML Oatmilk (Oatside)\n7.5 ML French Vanilla\n7 G Matcha powder\n30G Biscoff sauce\n16oz Cup\nIce\nMix 45 ML Hot Water and 7 grams Matcha Powder in a shot glass. Pour the\nmatcha and fill cup with ice.\nIn another shot glass mix Biscoff sauce and milk, Then pour onto cup.\n16oz Cup\n16oz Cup"
+ ],
+ "chocolate-spanish-latte": [
+  "Chocolate SPANISH\nLATTE\nESPRESSO SHOT\nRATIO:\n150 ML Full Cream milk\nDouble shot Espresso\n30 ML Chocolate Sauce\n20G Condensed Milk\n16 OZ cup\nFull Cup Ice\nPinch of Salt\n???\n= 64.29 php\n120 php to 150 php\n1 Full Cup of Ice, Pour the Espresso Shot with 20 ML Condensed milk, Pinch of salt and 30ML\nChocolate sauce in shot glass and put 150ML of Milk.\nICED\n16oz Cup"
+ ],
+ "white-chocolate-mocha": [
+  "WHITE CHOCOLATE\nMOCHA\nESPRESSO SHOT\nRATIO:\n180-200 ML steamed milk\nDouble shot Espresso\n30MLVWhite Chocolate Sauce (2 pumps)\n12 OZ cup\nPut the espresso with 30ML White Chocolate Sauce in a Shot glass, stir well. Then, pour it\ninto a cup and top it with steamed milk with foam.\nHOT\n12 oz Cup"
+ ],
+ "hazelnut-latte": [
+  "HAZELNUT LATTE\nESPRESSO SHOT\nRATIO:\n180-200 ML steamed milk\nDouble shot Espresso\n15 ML Hazelnut Syrup (2 pumps)\n12 OZ cup\nPut the espresso with 15ML Hazelnut Syrup in a cup and pour the steamed milk with foam\nHOT\n16OZ LUNGO SHOT\nRATIO:\n180-200 ML steamed milk\n60ML Lungo Shot\n15 ML Hazelnut Syrup (2 pumps)\n16 OZ cup\nPut the Lungo Shot with 15 ML Hazelnut Syrup in a cup and pour the steamed milk with\nfoam\n12 oz Cup",
+  "HAZELNUT LATTE\nICED\n16oz Cup\nESPRESSO SHOT\nRATIO:\n150 ML Full Cream milk\nDouble shot Espresso\n15 ml Hazelnut Syrup (2pumps)\n16 OZ cup\nFull Cup Ice\n1 Full Cup of Ice, Milk in cup, and pour the Espresso Shot with 15 ML of Vanilla Syrup in shot\nglass, last stir well\n22 LUNGO SHOT\nRATIO:\n150 ML Full Cream milk\n60ML Lungo Shot\n22.5 ml Hazelnut Syrup (3pumps)\n22 OZ cup\nFull Cup Ice\n1 Full Cup of Ice, Milk in cup, and pour the Lungo Shot with 15 ML of Vanilla Syrup in shot\nglass, last stir well"
+ ],
+ "vanilla-latte": [
+  "VANILLA LATTE\nICED\n16oz Cup\nESPRESSO SHOT\nRATIO:\n150 ML Full Cream milk\nDouble shot Espresso\n15 ml Vanilla Syrup (2pumps)\n16 OZ cup\nFull Cup Ice\n1 Full Cup of Ice, Milk in cup, and pour the Espresso Shot with 15 ML of Vanilla Syrup in shot\nglass, last stir well\n22 LUNGO SHOT\nRATIO:\n150 ML Full Cream milk\n60ML Lungo Shot\n22.5 ML Vanilla Syrup (3 pumps)\n22 OZ cup\nFull Cup Ice\n1 Full Cup of Ice, Milk in cup, and pour the Lungo Shot with 15 ML of Vanilla Syrup in shot\nglass, last stir well"
+ ],
+ "sea-salt-latte": [
+  "SEA SALT LATTE\nESPRESSO SHOT\nRATIO:\nDouble Shot Espresso\n120 ML Full Cream Milk\n15 ML Vanilla Syrup\n30G Sea Salt Foam\nIce\n16oz Cup\n180 to 200 php\nPut 15 ML Vanilla Syrup add full cup of ice and fill with Milk.\nAdd the espresso shot and lastly top with sea salt foam.\n16oz Cup"
+ ],
+ "butter-beer": [
+  "Butter Beer\nFRAPPUCCINO\n16 OZ cup\nRATIO:\n30G DVG Butterscotch sauce\n15G DVG ToffeeNut syrup\n30G Frappease Powder\n70G Milk\nDouble Shot Espresso\n10G DVG Caramel Sauce\n16 OZ cup\nFull Cup Ice\nWhipping Cream"
+ ],
+ "oreo-cheesecake-frappe": [
+  "OREO Cheesecake\nFRAPPE\n16 OZ CUP\nRATIO:\n30G Creamy Vanilla (2 pumps)\n30 Grams frappease powder\nFull Cup Ice\n100 ML Milk\n16 OZ cup\n30G Crushed Oreo\n15G Cheesecake Powder\nWhipping Cream\nAdd all the Ingredients, blend for 35 seconds. Pour it into a cup and Drizzle\nwhipped cream then, sprinkle Cookies and Cream on top.\n16oz Cup"
+ ],
+ "strawberry-mochi-frappe": [
+  "Strawberry Mochi\nFrappe\n16 OZ cup\nRATIO:\n30G Strawberry Jam (Doking)\n20G Condensed Milk\n50G Milk\n30G Frappease Powder\n10G Matcha powder\n50ML Hot water\n16 OZ cup\nFull Cup Ice\nWhipping Cream\n220 php t 250 php\n.\n16oz Cup"
+ ],
+ "matcha-cheesecake": [
+  "MATCHA\nCheesecake\n16 OZ cup\nRATIO:\n30G DVG Matcha Powder\n30G Cheesecake Powder\n7.5ML Vanilla Syrup (1pump)\n30G Frappease Powder\n100 ML Milk\n16 OZ cup\nFull Cup Ice\nWhipping Cream\n16oz Cup\nAdd all the Ingredients, blend for 35 seconds.Pour it into a cup and Drizzle\nwhipped cream"
+ ]
+};
+var CATALOG=[{"id": "americano", "name": "Americano", "cat": "coffee"}, {"id": "cappuccino", "name": "Cappuccino", "cat": "coffee"}, {"id": "cafe-mocha", "name": "Café Mocha", "cat": "coffee"}, {"id": "hazelnut-mocha", "name": "Hazel Nut Mocha", "cat": "coffee"}, {"id": "salted-caramel-latte", "name": "Salted Caramel Latte", "cat": "coffee"}, {"id": "caramel-macchiato", "name": "Caramel Macchiato", "cat": "coffee"}, {"id": "spanish-latte", "name": "Spanish Latte", "cat": "coffee"}, {"id": "dirty-matcha-latte", "name": "Dirty Matcha Latte", "cat": "coffee"}, {"id": "toffee-nut", "name": "Toffee Nut", "cat": "coffee"}, {"id": "biscoff-latte", "name": "Biscoff Latte", "cat": "coffee"}, {"id": "signature-hot-chocolate", "name": "Signature Hot Chocolate", "cat": "noncoffee"}, {"id": "green-tea-matcha-latte", "name": "Green Tea Matcha Latte", "cat": "noncoffee"}, {"id": "butterscotch-latte", "name": "Butterscotch Latte", "cat": "bestseller"}, {"id": "pandan-americano", "name": "Pandan Americano", "cat": "bestseller"}, {"id": "popcorn-latte", "name": "Popcorn Latte", "cat": "bestseller"}, {"id": "kasoy-latte", "name": "Kasoy Latte", "cat": "bestseller"}, {"id": "vanilla-brulee-latte", "name": "Vanilla Brûlée Latte", "cat": "bestseller"}, {"id": "java-chip-frappuccino", "name": "Java Chip Frappuccino", "cat": "frappe"}, {"id": "smores-frappuccino", "name": "S'mores Frappuccino", "cat": "frappe"}, {"id": "green-tea-matcha-frappe", "name": "Green Tea Matcha Frappe", "cat": "frappe"}, {"id": "caramel-popcorn-frappuccino", "name": "Caramel Popcorn Frappuccino", "cat": "frappe"}, {"id": "blueberry-soda", "name": "Blueberry Soda", "cat": "refresher"}, {"id": "raspberry-soda", "name": "Raspberry Soda", "cat": "refresher"}, {"id": "lychee-soda", "name": "Lychee Soda", "cat": "refresher"}, {"id": "mt-cookies-cream", "name": "Cookies and Cream", "cat": "milktea"}, {"id": "mt-matcha", "name": "Matcha", "cat": "milktea"}, {"id": "mt-winter-melon", "name": "Winter Melon", "cat": "milktea"}, {"id": "mt-mixed-berries", "name": "Mixed Berries", "cat": "milktea"}, {"id": "mt-hazelnut", "name": "Hazelnut", "cat": "milktea"}, {"id": "mt-vanilla", "name": "Vanilla", "cat": "milktea"}, {"id": "mt-salted-caramel", "name": "Salted Caramel", "cat": "milktea"}, {"id": "mt-cheesecake", "name": "Cheesecake", "cat": "milktea"}, {"id": "classic-chocolate-chip", "name": "Classic Chocolate Chip", "cat": "cookies"}, {"id": "chocolate-madness-cookie", "name": "Chocolate Madness", "cat": "cookies"}, {"id": "red-velvet-cream-cheese", "name": "Red Velvet Cream Cheese", "cat": "cookies"}, {"id": "matcha-cashew", "name": "Matcha Cashew", "cat": "cookies"}, {"id": "biscoff-drip", "name": "Biscoff Drip", "cat": "cookies"}, {"id": "blueberry-cheesecake", "name": "Blueberry Cheesecake", "cat": "cheesecake"}, {"id": "strawberry-cake", "name": "Strawberry Cake", "cat": "cakes"}, {"id": "chocolate-moist-cake", "name": "Chocolate Moist Cake", "cat": "cakes"}, {"id": "ube-cake", "name": "Ube Cake", "cat": "cakes"}, {"id": "cloud-cake", "name": "Cloud Cake", "cat": "cakes"}, {"id": "chocolate-cupcake", "name": "Chocolate Cupcake", "cat": "cakes"}, {"id": "cinnamon-sunday", "name": "Cinnamon Sunday", "cat": "cinnamon"}, {"id": "biscoff-bliss", "name": "Biscoff Bliss", "cat": "cinnamon"}, {"id": "chocolate-madness-roll", "name": "Chocolate Madness", "cat": "cinnamon"}, {"id": "strawberry-streusel", "name": "Strawberry Streusel", "cat": "cinnamon"}, {"id": "mini-classic", "name": "Mini Classic", "cat": "minicookies"}, {"id": "mini-matcha", "name": "Mini Matcha", "cat": "minicookies"}, {"id": "mini-red-velvet", "name": "Mini Red Velvet", "cat": "minicookies"}, {"id": "mini-chocolate-madness", "name": "Mini Chocolate Madness", "cat": "minicookies"}, {"id": "mini-biscoff", "name": "Mini Biscoff", "cat": "minicookies"}];
+var $=function(id){return document.getElementById(id)};
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function toast(m){var t=$('toast');t.textContent=m;t.hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(function(){t.hidden=true},2200)}
+function pad(n){return '#'+String(n).padStart(3,'0')}
+var orders=[],statuses={},tab='new',recipeCat='all',selected='',sbAt='',sbAtExp=0;
+async function sbToken(){
+  if(sbAt&&Date.now()<sbAtExp)return sbAt;
+  var r=await fetch('https://vggaswbjsmyvfheofnnj.supabase.co/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:SB_QREF})});
+  if(!r.ok)throw new Error('offline');var j=await r.json();sbAt=j.access_token;sbAtExp=Date.now()+(j.expires_in-60)*1000;return sbAt;
+}
+async function sbRow(){
+  var at=await sbToken();
+  var r=await fetch('https://vggaswbjsmyvfheofnnj.supabase.co/rest/v1/bloom_data?select=doc,rev&user_id=eq.'+SB_QKU,{headers:{apikey:SB_KEY,Authorization:'Bearer '+at}});
+  if(!r.ok)throw new Error('read failed');var a=await r.json(),row=a[0]||{doc:{},rev:0};return {doc:row.doc||{},rev:Number(row.rev)||0};
+}
+async function sbSetStatus(uid,st){
+  var at=await sbToken(),row=await sbRow(),doc=row.doc||{};
+  var ss=Object.assign({},doc.statuses||{});ss[String(uid)]={status:st,statusAt:new Date().toISOString()};
+  var r=await fetch('https://vggaswbjsmyvfheofnnj.supabase.co/rest/v1/bloom_data?user_id=eq.'+SB_QKU+'&rev=eq.'+row.rev,{method:'PATCH',headers:{apikey:SB_KEY,Authorization:'Bearer '+at,'Content-Type':'application/json',Prefer:'return=representation'},body:JSON.stringify({doc:Object.assign({},doc,{statuses:ss}),rev:row.rev+1})});
+  if(!r.ok)throw new Error('status failed');
+  try{await fetch('https://vggaswbjsmyvfheofnnj.supabase.co/realtime/v1/api/broadcast',{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({topic:'qookie-orders',event:'status',payload:{uid:uid,status:st,statusAt:ss[uid].statusAt},priv:false})})}catch(e){}
+  statuses=ss;
+}
+function statusOf(o){var s=statuses[String(o.uid)];return s?s.status:(o.status||'done')}
+function load(){
+  return fetch(RAW+'?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+    orders=(j&&(j.orders||(j.state&&j.state.orders)))||[];
+    return sbRow().then(function(row){statuses=row.doc.statuses||{};render()}).catch(function(){render()});
+  }).catch(function(){render()});
+}
+function itemNames(o){return (o.items||[]).map(function(i){return i.name+' × '+i.qty}).join(', ')||'—'}
+function findRecipe(name){
+  var hit=CATALOG.find(function(p){return p.name===name||name&&(p.name.toLowerCase()===name.toLowerCase())});
+  if(hit&&PROCEDURES[hit.id])return {id:hit.id,name:hit.name,cat:hit.cat,text:PROCEDURES[hit.id].join('\n\n')};
+  var keys=Object.keys(PROCEDURES);
+  var k=keys.find(function(id){var p=CATALOG.find(function(x){return x.id===id});return p&&p.name.toLowerCase()===String(name).toLowerCase()});
+  if(k)return {id:k,name:name,cat:(CATALOG.find(function(x){return x.id===k})||{}).cat||'',text:PROCEDURES[k].join('\n\n')};
+  return null;
+}
+function render(){
+  var groups={new:[],preparing:[],ready:[],done:[]};
+  orders.forEach(function(o){var st=statusOf(o);if(st==='pending')groups.new.push(o);else if(st==='preparing')groups.preparing.push(o);else if(st==='ready')groups.ready.push(o);else groups.done.push(o)});
+  groups.done.sort(function(a,b){return new Date(b.ts)-new Date(a.ts)});
+  var list=groups[tab];
+  $('orders').innerHTML=list.length?list.map(function(o){
+    var st=statusOf(o),cls=st==='pending'?'new':st;
+    var acts=st==='pending'?'<button class="go" data-act="preparing" type="button">Start</button>':
+      st==='preparing'?'<button class="go" data-act="ready" type="button">Ready</button>':
+      '<button class="done" data-act="done" type="button">Done</button>';
+    return '<div class="order '+cls+'" data-uid="'+esc(o.uid)+'">'+
+      '<div class="order-head"><span class="num">'+pad(o.id)+'</span><span class="tag '+cls+'">'+esc(st)+'</span>'+
+      (o.table?'<span class="tag">Table '+esc(o.table)+'</span>':'')+(o.mode?'<span class="tag">'+esc(o.mode)+'</span>':'')+'</div>'+
+      '<div class="items">'+esc(itemNames(o))+'</div>'+
+      (o.customer?'<div class="meta">For '+esc(o.customer)+'</div>':'')+
+      (o.notes?'<div class="meta">'+esc(o.notes)+'</div>':'')+
+      '<div class="acts">'+acts+'<button data-act="recipe" type="button">Recipe</button></div></div>';
+  }).join(''):'<div class="order">Nothing here.</div>';
+}
+function renderRecipes(){
+  var q=($('recipeSearch').value||'').toLowerCase();
+  var list=CATALOG.filter(function(p){return (recipeCat==='all'||p.cat===recipeCat)&&(!q||p.name.toLowerCase().indexOf(q)>-1)&&PROCEDURES[p.id]});
+  $('rlist').innerHTML=list.map(function(p){return '<button type="button" data-recipe="'+esc(p.id)+'" class="'+(selected===p.id?'on':'')+'">'+esc(p.name)+'</button>'}).join('')||'<span style="font-size:12px;color:var(--muted)">No recipe found</span>';
+}
+function showRecipe(id){
+  selected=id;renderRecipes();
+  var p=CATALOG.find(function(x){return x.id===id});
+  $('recipe').textContent=(p?p.name+'\n\n':'')+((PROCEDURES[id]||['No published procedure. Follow the counter standard.']).join('\n\n'));
+}
+$('tabs').addEventListener('click',function(e){var b=e.target.closest('[data-tab]');if(!b)return;tab=b.dataset.tab;[].forEach.call(this.querySelectorAll('.tab'),function(x){x.classList.toggle('on',x===b)});render()});
+$('chips').addEventListener('click',function(e){var b=e.target.closest('[data-cat]');if(!b)return;recipeCat=b.dataset.cat;[].forEach.call(this.querySelectorAll('.chip'),function(x){x.classList.toggle('on',x===b)});renderRecipes()});
+$('rlist').addEventListener('click',function(e){var b=e.target.closest('[data-recipe]');if(b)showRecipe(b.dataset.recipe)});
+$('recipeSearch').addEventListener('input',renderRecipes);
+$('refresh').addEventListener('click',function(){load();toast('Refreshed')});
+$('orders').addEventListener('click',function(e){
+  var b=e.target.closest('[data-act]');if(!b)return;
+  var card=b.closest('.order'),uid=card&&card.dataset.uid,o=orders.find(function(x){return String(x.uid)===String(uid)});if(!o)return;
+  if(b.dataset.act==='recipe'){
+    var names=(o.items||[]).map(function(i){return i.name});
+    var found=null;names.forEach(function(n){if(!found)found=findRecipe(n)});
+    if(found){showRecipe(found.id);var pn=document.querySelector('.panel');if(pn&&pn.scrollIntoView)pn.scrollIntoView({behavior:'smooth'})}
+    else{$('recipe').textContent='No published procedure for: '+names.join(', ')}
+    return;
+  }
+  sbSetStatus(o.uid,b.dataset.act).then(function(){o.status=b.dataset.act;render();toast('Order '+pad(o.id)+' → '+b.dataset.act)}).catch(function(e){toast(e.message)});
+});
+setInterval(function(){
+  var c=$('clock');if(c)c.textContent=new Date().toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'});
+},1000);
+setInterval(load,3000);
+renderRecipes();load();
+})();
+</script>
+</body>
+</html>

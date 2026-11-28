@@ -14,12 +14,12 @@
   }
   *{box-sizing:border-box}
   html,body{height:100%}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Courier New",ui-monospace,monospace;-webkit-font-smoothing:antialiased}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased}
   button,input,select,textarea{font:inherit;color:inherit}
   button{cursor:pointer}
   :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   [hidden]{display:none!important}
-  .serif{font-family:Georgia,"Times New Roman",serif}
+  .serif{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-weight:700}
   .muted{color:var(--muted)}
   .tiny{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
   .tag{display:inline-block;padding:3px 8px;border-radius:999px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;background:var(--panel);border:1px solid var(--line)}
@@ -30,7 +30,7 @@
   #app{display:grid;grid-template-columns:212px minmax(0,1fr);height:100dvh;overflow:hidden}
   #navRail{background:var(--ink);color:#F6EFE5;display:flex;flex-direction:column;padding:18px 12px;gap:4px;overflow-y:auto}
   .brand{padding:4px 8px 18px;border-bottom:1px solid rgba(246,239,229,.16);margin-bottom:10px}
-  .brand b{display:block;font-family:Georgia,serif;font-size:19px;letter-spacing:-.04em}
+  .brand b{display:block;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-weight:700;font-size:19px;letter-spacing:-.04em}
   .brand small{display:block;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#C9B7A4;margin-top:4px}
   .nav-btn{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;padding:0 12px;border:0;border-radius:10px;background:transparent;color:#E8DACA;text-align:left;font-size:13px;letter-spacing:.06em;text-transform:uppercase}
   .nav-btn .ico{width:18px;text-align:center;font-size:15px;opacity:.85}
@@ -43,7 +43,7 @@
   .rail-foot button{width:100%;margin-top:8px;min-height:36px;border:1px solid rgba(255,255,255,.25);background:transparent;color:#F6EFE5;border-radius:8px;font-size:11px;letter-spacing:.1em;text-transform:uppercase}
   .workspace{display:flex;flex-direction:column;min-width:0;overflow:hidden}
   .topbar{display:flex;align-items:center;gap:12px;padding:10px 18px;border-bottom:1px solid var(--line);background:var(--paper);flex-wrap:wrap}
-  .topbar h1{font-family:Georgia,serif;font-size:20px;letter-spacing:-.04em;margin:0;white-space:nowrap}
+  .topbar h1{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-weight:700;font-size:20px;letter-spacing:-.04em;margin:0;white-space:nowrap}
   .topbar .clock{font-size:12px;color:var(--muted);white-space:nowrap}
   .topbar .spacer{flex:1}
   #syncStatus{font-size:11px;color:var(--muted);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -51,7 +51,7 @@
   .icon-btn{min-width:38px;min-height:38px;border:1px solid var(--line);background:var(--paper);border-radius:9px;font-size:14px}
   main{flex:1;min-height:0;overflow-y:auto;padding:16px 18px 40px}
   .view-head{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
-  .view-head h2{font-family:Georgia,serif;font-size:26px;letter-spacing:-.04em;margin:0}
+  .view-head h2{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-weight:700;font-size:26px;letter-spacing:-.04em;margin:0}
   .view-head .spacer{flex:1}
   .btn{min-height:40px;padding:0 14px;border:1px solid var(--line);background:var(--paper);border-radius:9px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:700}
   .btn:hover{border-color:var(--accent)}
@@ -76,13 +76,13 @@
   .product-tile{position:relative;text-align:left;min-height:134px;padding:10px;border:1px solid var(--line);background:var(--paper);border-radius:12px;display:flex;flex-direction:column;gap:6px;overflow:hidden}
   .product-tile:hover{border-color:var(--accent)}
   .product-tile img{width:100%;height:64px;object-fit:cover;border-radius:8px;background:var(--panel)}
-  .product-tile .pname{font-family:Georgia,serif;font-size:14px;line-height:1.15;flex:1}
+  .product-tile .pname{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-weight:700;font-size:14px;line-height:1.15;flex:1}
   .product-tile .pprice{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums}
   .product-tile .pbar{position:absolute;right:8px;top:8px;font-size:10px;padding:2px 6px;border-radius:999px;background:rgba(255,253,249,.92);border:1px solid var(--line)}
   .product-tile.low .pbar{color:var(--danger);border-color:#E3C4C4}
   .cart-panel{border:1px solid var(--line);background:var(--paper);border-radius:12px;display:flex;flex-direction:column;max-height:calc(100dvh - 116px);position:sticky;top:0}
   .cart-head{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-  .cart-head strong{font-family:Georgia,serif;font-size:18px}
+  .cart-head strong{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-weight:700;font-size:18px}
   .cart-head .spacer{flex:1}
   #cartLines{padding:8px 14px;overflow-y:auto;flex:1;min-height:120px}
   .cart-line{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;padding:9px 0;border-bottom:1px dashed var(--line)}
@@ -98,14 +98,14 @@
   .cart-actions{display:flex;gap:6px;padding:8px 14px;border-top:1px solid var(--line);flex-wrap:wrap}
   .cart-totals{padding:10px 14px;border-top:1px solid var(--line);font-size:13px}
   .tot-row{display:flex;justify-content:space-between;padding:3px 0}
-  .tot-row.grand{font-size:22px;font-family:Georgia,serif;font-weight:700;padding-top:8px}
+  .tot-row.grand{font-size:22px;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-weight:700;font-weight:700;padding-top:8px}
   #orderNotes{width:calc(100% - 28px);margin:0 14px 8px;min-height:40px;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12px;resize:vertical}
   .charge-wrap{padding:0 14px 14px}
   #chargeBtn{width:100%;min-height:54px;border:0;border-radius:10px;background:var(--accent);color:#FFFDF9;font-size:15px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
   #chargeBtn:disabled{opacity:.4}
   #mobileCartBtn{display:none;position:fixed;right:14px;bottom:14px;z-index:30;min-height:52px;padding:0 18px;border:0;border-radius:999px;background:var(--accent);color:#FFFDF9;font-weight:700;box-shadow:0 6px 20px rgba(42,27,18,.25)}
   .panel{border:1px solid var(--line);background:var(--paper);border-radius:12px;padding:14px;margin-bottom:14px}
-  .panel h3{font-family:Georgia,serif;font-size:18px;margin:0 0 10px}
+  .panel h3{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-weight:700;font-size:18px;margin:0 0 10px}
   .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
   .grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
   table{width:100%;border-collapse:collapse;font-size:13px}
@@ -113,7 +113,7 @@
   th{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
   td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
   .card-stat{border:1px solid var(--line);border-radius:12px;background:var(--paper);padding:14px}
-  .card-stat b{display:block;font-family:Georgia,serif;font-size:28px;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+  .card-stat b{display:block;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-weight:700;font-size:28px;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
   .card-stat span{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
   .form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:10px}
   label{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
@@ -128,18 +128,18 @@
   .overlay{position:fixed;inset:0;z-index:60;background:rgba(24,16,10,.55);display:flex;align-items:center;justify-content:center;padding:14px}
   .sheet{width:min(100%,480px);max-height:92dvh;overflow-y:auto;background:var(--paper);border-radius:16px;border:1px solid var(--line);padding:18px}
   .sheet.wide{width:min(100%,720px)}
-  .sheet h2{font-family:Georgia,serif;font-size:24px;letter-spacing:-.04em;margin:0 0 12px}
+  .sheet h2{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-weight:700;font-size:24px;letter-spacing:-.04em;margin:0 0 12px}
   .sheet-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
   .sheet-head h2{margin:0;flex:1}
   .close-x{width:36px;height:36px;border:1px solid var(--line);background:var(--paper);border-radius:50%;font-size:18px}
   .pay-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px}
   .pay-opt{min-height:56px;border:1px solid var(--line);background:var(--paper);border-radius:10px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;font-weight:700}
   .pay-opt.on{background:var(--accent);border-color:var(--accent);color:#FFFDF9}
-  .big-amount{font-family:Georgia,serif;font-size:40px;letter-spacing:-.05em;font-variant-numeric:tabular-nums;text-align:center;margin:10px 0}
+  .big-amount{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-weight:700;font-size:40px;letter-spacing:-.05em;font-variant-numeric:tabular-nums;text-align:center;margin:10px 0}
   #toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:90;background:var(--ink);color:#FFFDF9;padding:11px 18px;border-radius:999px;font-size:13px;box-shadow:0 6px 20px rgba(42,27,18,.3)}
   .kitchen-alert{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:80;width:min(94vw,720px);background:var(--ink);color:#FFFDF9;border:2px solid var(--accent);border-radius:16px;padding:16px 18px;box-shadow:0 14px 40px rgba(42,27,18,.45);animation:kaPulse 1.1s ease-in-out 3}
   .kitchen-alert .ka-top{display:flex;align-items:center;gap:12px;margin-bottom:8px}
-  .kitchen-alert .ka-top b{font-family:Georgia,serif;font-size:26px;letter-spacing:-.04em;color:var(--accent)}
+  .kitchen-alert .ka-top b{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-weight:700;font-size:26px;letter-spacing:-.04em;color:var(--accent)}
   .kitchen-alert .ka-top span{font-size:22px;font-weight:700}
   .kitchen-alert .ka-items{font-size:15px;line-height:1.5;margin-bottom:6px}
   .kitchen-alert .ka-meta{font-size:12px;color:#E8DACA;margin-bottom:12px}
@@ -148,11 +148,20 @@
   @keyframes kaPulse{0%,100%{box-shadow:0 14px 40px rgba(42,27,18,.45)}50%{box-shadow:0 0 0 8px rgba(201,142,82,.28),0 14px 40px rgba(42,27,18,.45)}}
   .receipt{background:#fff;color:#111;border:1px solid var(--line);padding:16px;font-size:12px;line-height:1.5}
   .receipt .rh{text-align:center;border-bottom:1px dashed #999;padding-bottom:8px;margin-bottom:8px}
-  .receipt .rh b{font-family:Georgia,serif;font-size:17px}
+  .receipt .rh b{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;font-weight:700;font-size:17px}
   .receipt .rr{display:flex;justify-content:space-between;gap:10px}
   .receipt .rt{border-top:1px dashed #999;margin-top:8px;padding-top:8px;font-weight:700;font-size:15px}
   .receipt .rf{text-align:center;border-top:1px dashed #999;margin-top:10px;padding-top:8px}
   kbd{display:inline-block;padding:1px 6px;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;background:var(--paper);font-size:11px}
+  .quick-dock{position:fixed;right:14px;top:50%;transform:translateY(-50%);z-index:45;display:flex;flex-direction:column;gap:7px;background:rgba(255,253,249,.94);border:1px solid var(--line);border-radius:999px;padding:8px;box-shadow:0 8px 26px rgba(42,27,18,.16)}
+  .quick-dock button{width:46px;height:46px;border:1px solid var(--line);border-radius:50%;background:var(--paper);font-size:19px;line-height:1;display:grid;place-items:center}
+  .quick-dock button:hover{border-color:var(--accent)}
+  .quick-dock button.go{background:var(--accent);border-color:var(--accent);color:#FFFDF9}
+  .cart-actions{display:none}
+  @media (max-width:900px){
+    .quick-dock{top:auto;bottom:76px;right:10px;left:10px;transform:none;flex-direction:row;justify-content:space-around;border-radius:16px;padding:6px}
+    .quick-dock button{width:42px;height:42px;font-size:17px}
+  }
   #printArea{display:none}
   @media print{
     body{background:#fff}
@@ -181,7 +190,7 @@
 </style>
 <script>
 (function(){
-  var BUILD='v2026-11-28-1505';window.__BUILD=BUILD;
+  var BUILD='v2026-11-28-2030';window.__BUILD=BUILD;
   function stamp(){var el=document.getElementById('buildTag');if(el)el.textContent=BUILD}
   function check(){
     fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
@@ -229,6 +238,7 @@
       <span class="clock" id="clock"></span>
       <span class="spacer"></span>
       <span id="syncStatus">Not connected</span>
+      <a class="icon-btn" href="barista.html" target="_blank" rel="noopener" title="Barista screen">B</a>
       <button class="icon-btn" id="helpBtn" type="button" title="Keyboard shortcuts">?</button>
     </header>
     <main>
@@ -246,10 +256,9 @@
           </div>
           <div class="cart-panel" id="cartPanel">
             <div class="cart-head">
-              <strong>Current order</strong>
               <span id="ticketName" class="tag">New</span>
               <span class="spacer"></span>
-              <select id="orderMode" style="width:auto;min-height:34px;font-size:12px"><option>Dine in</option><option>Take out</option></select>
+              <select id="orderMode" style="width:auto;min-height:38px;font-size:13px"><option>Dine in</option><option>Take out</option></select>
             </div>
             <div id="cartLines"></div>
             <textarea id="orderNotes" placeholder="Order notes / kitchen instructions"></textarea>
@@ -351,17 +360,32 @@
             <div id="userList"></div>
             <div class="form-row" style="margin-top:10px"><input id="newUserName" placeholder="Name"><input id="newUserLogin" placeholder="Login"><input id="newUserPass" placeholder="Password"><select id="newUserRole"><option value="cashier">Cashier</option><option value="manager">Manager</option><option value="barista">Barista</option><option value="admin">Admin</option></select><button class="btn" id="addUserBtn" type="button">Add</button></div>
           </div>
-          <div class="panel"><h3>Cloud sync</h3>
-            <div class="form-row"><div><label>Repository</label><input id="syncRepo" value="delishworks-design/qookie-project-data"></div></div>
-            <div class="form-row"><div><label>GitHub token</label><input id="syncToken" type="password" placeholder="PAT"></div></div>
-            <div class="btn-row"><button class="btn" id="syncConnect" type="button">Connect</button><button class="btn" id="syncNow" type="button">Sync now</button></div>
-            <p id="syncNote" class="tiny" style="margin-top:10px">Orders sync to GitHub data.json; customer orders arrive through Supabase.</p>
+          <div class="panel"><h3>Printer &amp; drawer</h3>
+            <div class="btn-row"><button class="btn primary" id="btConnect" type="button">Connect Bluetooth printer</button><button class="btn" id="serialConnect" type="button">Connect USB / Serial</button></div>
+            <p id="deviceStatus" class="tiny" style="margin:10px 0">No device connected</p>
+            <div class="btn-row"><button class="btn" id="testPrint" type="button">Test print</button><button class="btn" id="openDrawerBtn" type="button">Open cash drawer</button></div>
+            <div class="check" style="margin-top:10px"><input type="checkbox" id="drawerOnSale"><label for="drawerOnSale">Open drawer after each sale</label></div>
+            <details style="margin-top:10px"><summary class="tiny">Advanced device settings</summary>
+              <div class="form-row" style="margin-top:10px"><div><label>Service UUID (optional)</label><input id="btService" placeholder="000018f0-0000-1000-8000-00805f9b34fb"></div></div>
+              <div class="form-row"><div><label>Characteristic UUID (optional)</label><input id="btChar" placeholder="0000ff01-0000-1000-8000-00805f9b34fb"></div></div>
+              <div class="form-row"><div><label>Serial baud rate</label><input id="serialBaud" type="number" value="9600"></div></div>
+            </details>
           </div>
-          <div class="panel"><h3>Data</h3>
-            <div class="btn-row"><button class="btn" id="backupBtn" type="button">Download backup</button><button class="btn" id="restoreBtn" type="button">Restore backup</button><input id="restoreFile" type="file" accept="application/json" hidden></div>
-            <div class="btn-row" style="margin-top:10px"><button class="btn danger" id="clearTodayBtn" type="button">Clear all sales &amp; reset</button><button class="btn danger" id="resetBtn" type="button">Reset catalog &amp; settings</button></div>
-            <p class="tiny" style="margin-top:12px">Build <span id="buildLabel"></span></p>
-          </div>
+          <details class="panel" style="grid-column:1/-1"><summary class="tiny" style="cursor:pointer">Advanced — cloud sync &amp; data</summary>
+            <div class="grid2" style="margin-top:12px">
+              <div class="panel"><h3>Cloud sync</h3>
+                <div class="form-row"><div><label>Repository</label><input id="syncRepo" value="delishworks-design/qookie-project-data"></div></div>
+                <div class="form-row"><div><label>GitHub token</label><input id="syncToken" type="password" placeholder="PAT"></div></div>
+                <div class="btn-row"><button class="btn" id="syncConnect" type="button">Connect</button><button class="btn" id="syncNow" type="button">Sync now</button></div>
+                <p id="syncNote" class="tiny" style="margin-top:10px">Orders sync to GitHub data.json; customer orders arrive through Supabase.</p>
+              </div>
+              <div class="panel"><h3>Data</h3>
+                <div class="btn-row"><button class="btn" id="backupBtn" type="button">Download backup</button><button class="btn" id="restoreBtn" type="button">Restore backup</button><input id="restoreFile" type="file" accept="application/json" hidden></div>
+                <div class="btn-row" style="margin-top:10px"><button class="btn danger" id="clearTodayBtn" type="button">Clear all sales &amp; reset</button><button class="btn danger" id="resetBtn" type="button">Reset catalog &amp; settings</button></div>
+                <p class="tiny" style="margin-top:12px">Build <span id="buildLabel"></span></p>
+              </div>
+            </div>
+          </details>
         </div>
       </section>
     </main>
@@ -369,6 +393,18 @@
 </div>
 
 <button id="mobileCartBtn" type="button">View order</button>
+<div id="quickDock" class="quick-dock" aria-label="Quick actions">
+  <button type="button" data-q="new" title="New order">＋</button>
+  <button type="button" data-q="hold" title="Hold order">⏸</button>
+  <button type="button" data-q="recall" title="Open orders">◷</button>
+  <button type="button" data-q="split" title="Split order">½</button>
+  <button type="button" data-q="discount" title="Discount">%</button>
+  <button type="button" data-q="customer" title="Customer">♙</button>
+  <button type="button" data-q="notes" title="Notes">✎</button>
+  <button type="button" data-q="drawer" title="Open cash drawer">▣</button>
+  <button type="button" data-q="clear" title="Clear order">×</button>
+  <button type="button" data-q="charge" class="go" title="Charge">₱</button>
+</div>
 
 <div id="kitchenAlert" class="kitchen-alert" role="alert" hidden>
   <div class="ka-top"><b>NEW ORDER</b><span id="kaNum">#000</span></div>
@@ -903,7 +939,6 @@ function renderPOS(){
     (cartOrderDiscount()?'<div class="tot-row"><span>Order discount</span><span>-'+money(cartOrderDiscount())+'</span></div>':'')+
     (cartTax()?'<div class="tot-row"><span>Tax</span><span>'+money(cartTax())+'</span></div>':'')+
     '<div class="tot-row grand"><span>Total</span><span>'+money(cartTotal())+'</span></div>'+
-    '<div class="tot-row"><span class="tiny">Profit est.</span><span class="tiny">'+money(cartTotal()-cartCost())+'</span></div>'+
     (ticket.customer?'<div class="tot-row"><span class="tiny">Customer</span><span class="tiny">'+esc(ticket.customer)+'</span></div>':'');
   $('chargeBtn').disabled=!cart.length;
 }
@@ -1180,11 +1215,99 @@ function kitchenHtml(o){
 }
 function printReport(title,html){printArea('<h2>'+esc(title)+'</h2>'+html,false)}
 function downloadBlob(blob,name){var url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url)},1000)}
+var btDevice=null,btChar=null,serialPort=null,serialWriter=null;
+function enc(str){
+  if(window.TextEncoder)return new TextEncoder().encode(str);
+  var out=[];
+  for(var i=0;i<str.length;i++){
+    var c=str.charCodeAt(i);
+    if(c<128)out.push(c);
+    else if(c<2048){out.push(192|(c>>6),128|(c&63))}
+    else{out.push(224|(c>>12),128|((c>>6)&63),128|(c&63))}
+  }
+  return new Uint8Array(out);
+}
+function concatBytes(parts){var n=parts.reduce(function(s,p){return s+p.length},0),out=new Uint8Array(n),o=0;parts.forEach(function(p){out.set(p,o);o+=p.length});return out}
+function drawerBytes(){return new Uint8Array([27,112,0,25,250])}
+function receiptBytes(o){
+  var parts=[new Uint8Array([27,64]),enc(state.shop.name+'\n'+(state.shop.header||'')+'\n------------------------------\n')];
+  (o.items||[]).forEach(function(i){parts.push(enc(num(i.qty)+'x '+i.name+(i.variant?' ('+i.variant+')':'')+'\n   '+money((i.unit!=null?i.unit:num(i.price))*num(i.qty))+'\n'))});
+  parts.push(enc('------------------------------\nTOTAL: '+money(o.total)+'\n'+(o.customer?'Customer: '+o.customer+'\n':'')+(o.mode?'Mode: '+o.mode+(o.table?' / Table '+o.table:'')+'\n':'')+(o.notes?'Note: '+o.notes+'\n':'')+'\n'+(state.shop.footer||'')+'\n'+(state.shop.thanks||'Thank you!')+'\n\n\n'));
+  parts.push(new Uint8Array([29,86,66,0]));
+  return concatBytes(parts);
+}
+function kitchenBytes(o){
+  var parts=[new Uint8Array([27,64]),enc('KITCHEN TICKET\n'+state.shop.name+'\n'+pad(o.id)+'  '+new Date(o.ts).toLocaleTimeString('en-PH')+'\n'+(o.mode||'')+(o.table?' / Table '+o.table:'')+'\n------------------------------\n')];
+  (o.items||[]).forEach(function(i){parts.push(enc(num(i.qty)+' x '+i.name+(i.variant?' ('+i.variant+')':'')+'\n'+(i.note?'   '+i.note+'\n':'')))});
+  if(o.notes)parts.push(enc('NOTE: '+o.notes+'\n'));
+  parts.push(enc('\n\n\n'));parts.push(new Uint8Array([29,86,66,0]));
+  return concatBytes(parts);
+}
+async function deviceWrite(bytes){
+  if(btChar){
+    if(btChar.writeValueWithoutResponse)await btChar.writeValueWithoutResponse(bytes);
+    else await btChar.writeValue(bytes);
+    return true;
+  }
+  if(serialWriter){await serialWriter.write(bytes);return true}
+  return false;
+}
+function updateDeviceStatus(){
+  var el=$('deviceStatus');if(!el)return;
+  el.textContent=(btChar?'Bluetooth printer connected':(serialWriter?'USB/Serial printer connected':'No device connected'));
+  el.className='tag '+(btChar||serialWriter?'ok':'');
+}
+async function connectBt(){
+  if(!navigator.bluetooth){toast('Bluetooth not available — use Chrome on Android/desktop');return}
+  try{
+    btDevice=await navigator.bluetooth.requestDevice({acceptAllDevices:true,optionalServices:['000018f0-0000-1000-8000-00805f9b34fb','0000ff00-0000-1000-8000-00805f9b34fb','0000ffe0-0000-1000-8000-00805f9b34fb']});
+    var server=await btDevice.gatt.connect();
+    var svcId=($('btService')||{}).value&&$('btService').value.trim(),chId=($('btChar')||{}).value&&$('btChar').value.trim();
+    if(svcId&&chId){btChar=await(await server.getPrimaryService(svcId)).getCharacteristic(chId)}
+    else{
+      var services=await server.getPrimaryServices();
+      outer: for(var i=0;i<services.length;i++){
+        var chars=await services[i].getCharacteristics();
+        for(var j=0;j<chars.length;j++){
+          var p=chars[j].properties||{};
+          if(p.write||p.writeWithoutResponse){btChar=chars[j];break outer}
+        }
+      }
+    }
+    if(!btChar)throw new Error('no writable printer characteristic found');
+    updateDeviceStatus();toast('Printer connected');
+  }catch(e){toast('Bluetooth: '+((e&&e.message)||'failed'))}
+}
+async function connectSerial(){
+  if(!navigator.serial){toast('USB/Serial not available — use Chrome on desktop');return}
+  try{
+    serialPort=await navigator.serial.requestPort();
+    await serialPort.open({baudRate:Number(($('serialBaud')||{}).value)||9600});
+    serialWriter=serialPort.writable.getWriter();
+    updateDeviceStatus();toast('Serial printer connected');
+  }catch(e){toast('Serial: '+((e&&e.message)||'failed'))}
+}
+async function openDrawer(){
+  if(!btChar&&!serialWriter){toast('Connect a printer first');return false}
+  try{await deviceWrite(drawerBytes());toast('Drawer opened');return true}
+  catch(e){toast('Drawer: '+((e&&e.message)||'failed'));return false}
+}
+async function printReceiptDevice(o){
+  if(!o)return;
+  if(btChar||serialWriter){
+    try{await deviceWrite(receiptBytes(o));toast('Receipt printed');return}catch(e){toast('Print failed: '+e.message)}
+  }
+  printArea(receiptHtml(o),true);
+}
+async function printKitchenDevice(o){
+  if(!o)return;
+  if(btChar||serialWriter){
+    try{await deviceWrite(kitchenBytes(o));toast('Kitchen ticket printed');return}catch(e){toast('Print failed: '+e.message)}
+  }
+  printArea(kitchenHtml(o),true);
+}
 function escpos(o){
-  var lines=['\\x1B@','\\x1B!'+(0x18+1)+'\\x0A'+state.shop.name+'\\x0A\\x1B!0'];
-  (o.items||[]).forEach(function(i){lines.push(num(i.qty)+'x '+i.name+'\\x0A');lines.push('   '+money((i.unit!=null?i.unit:num(i.price))*num(i.qty))+'\\x0A')});
-  lines.push('--------------------------------\\x0A');lines.push('TOTAL: '+money(o.total)+'\\x0A\\x0A');lines.push(state.shop.thanks+'\\x0A\\x0A\\x0A');lines.push('\\x1DVB\\x00');
-  downloadBlob(new Blob(lines.map(function(l){return l}),{type:'application/octet-stream'}),'escpos-'+pad(o.id).slice(1)+'.bin');
+  downloadBlob(new Blob([receiptBytes(o)],{type:'application/octet-stream'}),'escpos-'+pad(o.id).slice(1)+'.bin');
   toast('ESC/POS file downloaded');
 }
 function startCharge(){
@@ -1258,6 +1381,7 @@ function completePayment(){
   save();closeModal('paymentOverlay');document.body.classList.remove('cart-open');
   lastReceipt=order;$('receiptPreview').innerHTML=receiptHtml(order);openModal('receiptOverlay');
   renderAll();toast(pad(order.id)+' paid · '+money(total));
+  if(state.settings&&state.settings.drawerOnSale)openDrawer();
 }
 function voidOrRefund(o,type){
   if(o.status==='void'||o.status==='refunded'){toast('Already '+o.status);return}
@@ -1295,6 +1419,8 @@ function renderSettings(){
   $('setShopName').value=sh.name||'';$('setHeader').value=sh.header||'';$('setFooter').value=sh.footer||'';$('setThanks').value=sh.thanks||'';$('setLogo').value=sh.logo||'';$('setLowStock').value=sh.lowStock||5;
   $('setTaxOn').checked=!!sh.taxOn;$('setTaxRate').value=sh.taxRate||0;
   $('syncRepo').value=syncRepo;$('syncToken').value=syncToken;
+  $('drawerOnSale').checked=!!(state.settings&&state.settings.drawerOnSale);
+  updateDeviceStatus();
   $('buildLabel').textContent=window.__BUILD||'';
   $('railUser').textContent=currentUser()?currentUser().name:'—';$('railRole').textContent=currentUser()?currentUser().role:'';
   $('shopTitle').textContent=sh.name||'KAPEtid';
@@ -1413,13 +1539,21 @@ on('taxOverride','change',function(){taxOnOverride=$('taxOverride').checked;rend
 on('payTaxRate','input',function(){ticket.taxRate=num($('payTaxRate').value);renderPOS()});
 on('paymentsList','click',function(e){var b=e.target.closest('[data-del-pay]');if(!b)return;payments.splice(Number(b.dataset.delPay),1);renderPayment()});
 on('confirmPayment','click',addPayment);
-on('printReceiptBtn','click',function(){if(lastReceipt)printArea(receiptHtml(lastReceipt),true)});
+on('btConnect','click',connectBt);
+on('serialConnect','click',connectSerial);
+on('testPrint','click',function(){
+  if(!btChar&&!serialWriter){toast('Connect a printer first');return}
+  deviceWrite(concatBytes([new Uint8Array([27,64]),enc('KAPEtid\nTEST PRINT\n----------------\n1234567890\n\n\n'),new Uint8Array([29,86,66,0])])).then(function(){toast('Test printed')}).catch(function(e){toast('Print failed: '+e.message)});
+});
+on('openDrawerBtn','click',openDrawer);
+on('printReceiptBtn','click',function(){printReceiptDevice(lastReceipt)});
 on('printInvoiceBtn','click',function(){if(lastReceipt)printReport('INVOICE · '+pad(lastReceipt.id),receiptHtml(lastReceipt))});
 on('escposBtn','click',function(){if(lastReceipt)escpos(lastReceipt)});
 on('orderTabs','click',function(e){var b=e.target.closest('[data-tab]');if(!b)return;orderTab=b.dataset.tab;renderOrders()});
 on('printKitchenAll','click',function(){
   var list=state.orders.filter(function(o){return ['pending','preparing','ready'].indexOf(orderStatus(o))>-1});
   if(!list.length){toast('No active kitchen tickets');return}
+  if(btChar||serialWriter){list.forEach(function(o){printKitchenDevice(o)});return}
   printArea(list.map(kitchenHtml).join('<div style="page-break-after:always"></div>'),true);
 });
 on('orderList','click',function(e){
@@ -1429,7 +1563,7 @@ on('orderList','click',function(e){
   if(st&&o)setOrderStatus(o,st.dataset.status);
   else if(pr&&o){o.priority=!o.priority;save();renderOrders()}
   else if(det&&o)openOrderDetail(o);
-  else if(prt&&o)printArea(kitchenHtml(o),true);
+  else if(prt&&o)printKitchenDevice(o);
 });
 on('detailPrint','click',function(){if(detailOrder)printArea(receiptHtml(detailOrder),true)});
 on('detailVoid','click',function(){if(detailOrder)voidOrRefund(detailOrder,'void')});
@@ -1514,6 +1648,7 @@ on('addUserBtn','click',function(){
   $('newUserName').value='';$('newUserLogin').value='';$('newUserPass').value='';
   save();renderSettings();toast('User added');
 });
+on('drawerOnSale','change',function(){state.settings.drawerOnSale=$('drawerOnSale').checked;save();toast('Drawer setting saved')});
 on('syncConnect','click',function(){connectSync(true)});
 on('syncNow','click',function(){connectSync(true)});
 on('backupBtn','click',function(){
@@ -1555,6 +1690,21 @@ on('resetBtn','click',function(){
 });
 document.addEventListener('click',function(e){
   var t=e.target;if(!t||!t.closest)return;
+  var q=t.closest('[data-q]');
+  if(q){
+    var act=q.dataset.q;
+    if(act==='new')newTicket();
+    else if(act==='hold')saveTicket(false);
+    else if(act==='recall'){renderTicketList();openModal('ticketOverlay')}
+    else if(act==='split'){$('splitAmount').value=num(cartTotal()/2);openModal('splitOverlay')}
+    else if(act==='discount'){if(can('discount')){$('discType').value=ticket.discountType;$('discValue').value=ticket.discount||'';openModal('discountOverlay')}}
+    else if(act==='customer'){renderPicker();openModal('customerPickerOverlay')}
+    else if(act==='notes'){$('orderNotes').focus();document.body.classList.add('cart-open')}
+    else if(act==='drawer'){openDrawer()}
+    else if(act==='clear'){cart=[];renderPOS();toast('Order cleared')}
+    else if(act==='charge')startCharge();
+    return;
+  }
   var close=t.closest('[data-close]');if(close){closeModal(close.dataset.close);return}
   var nav=t.closest('.nav-btn');if(nav){setView(nav.dataset.view);return}
   var rec=t.closest('[data-recall]');if(rec){var tt=state.tickets.find(function(x){return x.id===rec.dataset.recall});if(tt)loadTicket(tt);closeModal('ticketOverlay');return}
