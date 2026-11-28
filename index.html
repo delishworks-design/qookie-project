@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#2A1B12">
 <meta name="color-scheme" content="light">
-<title>The Qookie Project — Counter POS</title>
+<title>KAPEtid — Counter POS</title>
 <style>
   :root{
     --bg:#F6EFE5;--paper:#FFFDF9;--panel:#FBF5EC;--ink:#2A1B12;--muted:#8A7462;
@@ -181,7 +181,7 @@
 </style>
 <script>
 (function(){
-  var BUILD='v2026-11-28-1405';window.__BUILD=BUILD;
+  var BUILD='v2026-11-28-1420';window.__BUILD=BUILD;
   function stamp(){var el=document.getElementById('buildTag');if(el)el.textContent=BUILD}
   function check(){
     fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
@@ -197,7 +197,7 @@
 
 <div id="loginOverlay" class="overlay">
   <div class="sheet">
-    <h2>The Qookie Project</h2>
+    <h2>KAPEtid</h2>
     <p class="tiny">Counter POS · sign in</p>
     <form id="loginForm">
       <div class="form-row"><div><label for="loginEmail">User</label><input id="loginEmail" autocomplete="username" value="Qookie"></div></div>
@@ -210,7 +210,7 @@
 
 <div id="app" hidden>
   <aside id="navRail">
-    <div class="brand"><b>The Qookie Project</b><small>Counter POS</small></div>
+    <div class="brand"><b>KAPEtid</b><small>Counter POS</small></div>
     <button class="nav-btn on" type="button" data-view="pos" data-perm="sell"><span class="ico">▤</span>Sell</button>
     <button class="nav-btn" type="button" data-view="orders" data-perm="orders"><span class="ico">≡</span>Orders</button>
     <button class="nav-btn" type="button" data-view="products" data-perm="products"><span class="ico">◫</span>Products</button>
@@ -225,7 +225,7 @@
   </aside>
   <div class="workspace">
     <header class="topbar">
-      <h1 id="shopTitle">The Qookie Project</h1>
+      <h1 id="shopTitle">KAPEtid</h1>
       <span class="clock" id="clock"></span>
       <span class="spacer"></span>
       <span id="syncStatus">Not connected</span>
@@ -571,7 +571,7 @@ var DEFAULTS={
   categories:Object.keys(CAT_NAMES).map(function(k){return {id:k,name:CAT_NAMES[k]}}),
   customers:[],tickets:[],cashSessions:[],stockLogs:[],audit:[],
   users:[{id:'u-admin',name:'Owner',login:'Qookie',pass:'Qookie123',role:'admin',active:true}],
-  shop:{name:'The Qookie Project',header:'cookies & coffee',footer:'',thanks:'Thank you!',logo:'',taxOn:false,taxRate:0,lowStock:5},
+  shop:{name:'KAPEtid',header:'cookies & coffee',footer:'',thanks:'Thank you!',logo:'',taxOn:false,taxRate:0,lowStock:5},
   settings:{}
 };
 var PERMS={
@@ -777,7 +777,7 @@ async function doSync(){
     var cur=await fetch(syncUrl(),{headers:syncHeaders()});
     if(cur.status===404){syncSha=null}
     else if(cur.ok){var j=await cur.json();syncSha=j.sha;applyRemote(JSON.parse(decodeB64(j.content)),false)}
-    var body={message:'Sync Qookie Project state',content:encodeB64(JSON.stringify({version:2,updatedAt:state.updatedAt||Date.now(),state:state,orders:state.orders,deleted:state.deleted})),branch:'main'};
+    var body={message:'Sync KAPEtid state',content:encodeB64(JSON.stringify({version:2,updatedAt:state.updatedAt||Date.now(),state:state,orders:state.orders,deleted:state.deleted})),branch:'main'};
     if(syncSha)body.sha=syncSha;
     var res=await fetch(syncUrl(),{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},syncHeaders()),body:JSON.stringify(body)});
     if(res.status===409){syncSha=null;syncBusy=false;return doSync()}
@@ -1295,7 +1295,7 @@ function renderSettings(){
   $('syncRepo').value=syncRepo;$('syncToken').value=syncToken;
   $('buildLabel').textContent=window.__BUILD||'';
   $('railUser').textContent=currentUser()?currentUser().name:'—';$('railRole').textContent=currentUser()?currentUser().role:'';
-  $('shopTitle').textContent=sh.name||'The Qookie Project';
+  $('shopTitle').textContent=sh.name||'KAPEtid';
   $('userList').innerHTML=state.users.map(function(u){return '<div class="tot-row"><span>'+esc(u.name)+' <span class="tiny">'+esc(u.login)+' · '+esc(u.role)+'</span></span><span><button class="btn sm" data-user-role="'+esc(u.id)+'" type="button">Role</button></span></div>'}).join('');
 }
 function showApp(){$('app').hidden=false;$('loginOverlay').hidden=true}
@@ -1499,7 +1499,7 @@ on('cashSessionCard','click',function(e){
   if(e.target.closest('#closeSessionBtn')){closeSession();return}
 });
 on('saveShopBtn','click',function(){
-  Object.assign(state.shop,{name:$('setShopName').value.trim()||'The Qookie Project',header:$('setHeader').value.trim(),footer:$('setFooter').value.trim(),thanks:$('setThanks').value.trim(),logo:$('setLogo').value.trim(),lowStock:Number($('setLowStock').value)||5});
+  Object.assign(state.shop,{name:$('setShopName').value.trim()||'KAPEtid',header:$('setHeader').value.trim(),footer:$('setFooter').value.trim(),thanks:$('setThanks').value.trim(),logo:$('setLogo').value.trim(),lowStock:Number($('setLowStock').value)||5});
   save();renderSettings();renderPOS();toast('Store settings saved');
 });
 on('saveTaxBtn','click',function(){state.shop.taxOn=$('setTaxOn').checked;state.shop.taxRate=num($('setTaxRate').value);save();renderPOS();toast('Tax settings saved')});
@@ -1589,6 +1589,10 @@ try{
   }
   if(!localStorage.getItem('qookie.catalog.v5')){
     syncCatalog();localStorage.setItem('qookie.catalog.v5','1');save();
+  }
+  if(!localStorage.getItem('qookie.brand.kapetid')){
+    if(state.shop.name==='The Qookie Project'||!state.shop.name)state.shop.name='KAPEtid';
+    localStorage.setItem('qookie.brand.kapetid','1');save();
   }
 }catch(e){}
 renderAll();
