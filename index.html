@@ -172,7 +172,7 @@
 </style>
 <script>
 (function(){
-  var BUILD='v2026-11-28-1230';window.__BUILD=BUILD;
+  var BUILD='v2026-11-28-1330';window.__BUILD=BUILD;
   function stamp(){var el=document.getElementById('buildTag');if(el)el.textContent=BUILD}
   function check(){
     fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
@@ -544,8 +544,13 @@ var CATALOG=[
   {id:"biscoff-bliss",name:"Biscoff Bliss",cat:"cinnamon",price:130,img:"assets/photos/cinnamon.jpg",unit:"1 pc",desc:"Cinnamon roll with Biscoff."},
   {id:"chocolate-madness-roll",name:"Chocolate Madness",cat:"cinnamon",price:130,img:"assets/photos/cinnamon.jpg",unit:"1 pc",desc:"Cinnamon roll with chocolate."},
   {id:"strawberry-streusel",name:"Strawberry Streusel",cat:"cinnamon",price:130,img:"assets/photos/cinnamon.jpg",unit:"1 pc",desc:"Cinnamon roll with strawberry streusel."},
+  {id:"mini-classic",name:"Mini Classic",cat:"minicookies",price:25,img:"assets/photos/cookies-chocolate.jpg",unit:"1 pc",desc:"Small bite cookie — Classic."},
+  {id:"mini-matcha",name:"Mini Matcha",cat:"minicookies",price:25,img:"assets/photos/cookies-bowl.jpg",unit:"1 pc",desc:"Small bite cookie — Matcha."},
+  {id:"mini-red-velvet",name:"Mini Red Velvet",cat:"minicookies",price:25,img:"assets/photos/cookies-chocolate.jpg",unit:"1 pc",desc:"Small bite cookie — Red Velvet."},
+  {id:"mini-chocolate-madness",name:"Mini Chocolate Madness",cat:"minicookies",price:25,img:"assets/photos/cookies-chocolate.jpg",unit:"1 pc",desc:"Small bite cookie — Chocolate Madness."},
+  {id:"mini-biscoff",name:"Mini Biscoff",cat:"minicookies",price:25,img:"assets/photos/cookies-bowl.jpg",unit:"1 pc",desc:"Small bite cookie — Biscoff."},
 ];
-var CAT_NAMES={coffee:'Coffee',noncoffee:'Non-Coffee',bestseller:'Best Seller',frappe:'Frappe',refresher:'Refresher',milktea:'Milktea',cookies:'Cookies',cheesecake:'Cheesecake',cakes:'Cakes',cinnamon:'Cinnamon Roll'};
+var CAT_NAMES={coffee:'Coffee',noncoffee:'Non-Coffee',bestseller:'Best Seller',frappe:'Frappe',refresher:'Refresher',milktea:'Milktea',cookies:'Cookies',minicookies:'Small Bite Cookie',cheesecake:'Cheesecake',cakes:'Cakes',cinnamon:'Cinnamon Roll'};
 var DEFAULTS={
   products:[],orders:[],deleted:[],photos:[],seq:1,updatedAt:0,
   categories:Object.keys(CAT_NAMES).map(function(k){return {id:k,name:CAT_NAMES[k]}}),
@@ -975,8 +980,11 @@ function saveProductForm(){
 }
 function syncCatalog(){
   var removed=0,added=0,updated=0;
+  var stale={Biscoff:25,Classic:25,Matcha:25,'Red Velvet':25,'Double Chocolate':25,'Cookies and Cream':25,Americano:40,Mocha:60};
+  var catalogIds=CATALOG.map(function(c){return String(c.id)});
   state.products=state.products.filter(function(p){
     if(/^(c-|k-)/.test(String(p.id))){removed++;return false}
+    if(!catalogIds.includes(String(p.id))&&stale[p.name]===num(p.price)){removed++;return false}
     return true;
   });
   CATALOG.forEach(function(c){
@@ -1521,6 +1529,9 @@ try{
   }
   if(!localStorage.getItem('qookie.catalog.v2')){
     syncCatalog();localStorage.setItem('qookie.catalog.v2','1');save();
+  }
+  if(!localStorage.getItem('qookie.catalog.v3')){
+    syncCatalog();localStorage.setItem('qookie.catalog.v3','1');save();
   }
 }catch(e){}
 renderAll();

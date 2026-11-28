@@ -234,7 +234,7 @@
 </style>
 <script>
 (function(){
-  var BUILD='v2026-11-28-1230';window.__BUILD=BUILD;
+  var BUILD='v2026-11-28-1330';window.__BUILD=BUILD;
   function stamp(){var el=document.getElementById('buildTag');if(el)el.textContent=BUILD}
   function check(){
     fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
@@ -532,13 +532,18 @@
     {id:"biscoff-bliss",name:"Biscoff Bliss",cat:"cinnamon",price:130,img:"assets/photos/cinnamon.jpg",unitLabel:"1 pc",desc:"Cinnamon roll with Biscoff."},
     {id:"chocolate-madness-roll",name:"Chocolate Madness",cat:"cinnamon",price:130,img:"assets/photos/cinnamon.jpg",unitLabel:"1 pc",desc:"Cinnamon roll with chocolate."},
     {id:"strawberry-streusel",name:"Strawberry Streusel",cat:"cinnamon",price:130,img:"assets/photos/cinnamon.jpg",unitLabel:"1 pc",desc:"Cinnamon roll with strawberry streusel."},
+    {id:"mini-classic",name:"Mini Classic",cat:"minicookies",price:25,img:"assets/photos/cookies-chocolate.jpg",unitLabel:"1 pc",desc:"Small bite cookie — Classic."},
+    {id:"mini-matcha",name:"Mini Matcha",cat:"minicookies",price:25,img:"assets/photos/cookies-bowl.jpg",unitLabel:"1 pc",desc:"Small bite cookie — Matcha."},
+    {id:"mini-red-velvet",name:"Mini Red Velvet",cat:"minicookies",price:25,img:"assets/photos/cookies-chocolate.jpg",unitLabel:"1 pc",desc:"Small bite cookie — Red Velvet."},
+    {id:"mini-chocolate-madness",name:"Mini Chocolate Madness",cat:"minicookies",price:25,img:"assets/photos/cookies-chocolate.jpg",unitLabel:"1 pc",desc:"Small bite cookie — Chocolate Madness."},
+    {id:"mini-biscoff",name:"Mini Biscoff",cat:"minicookies",price:25,img:"assets/photos/cookies-bowl.jpg",unitLabel:"1 pc",desc:"Small bite cookie — Biscoff."},
   ];
   var GROUPS={
     coffee:'Coffee',noncoffee:'Non-Coffee',bestseller:'Best Seller',frappe:'Frappe',refresher:'Refresher',milktea:'Milktea',
-    cookies:'Cookies',cheesecake:'Cheesecake',cakes:'Cakes',cinnamon:'Cinnamon Roll'
+    cookies:'Cookies',minicookies:'Small Bite Cookie',cheesecake:'Cheesecake',cakes:'Cakes',cinnamon:'Cinnamon Roll'
   };
-  var GROUP_ORDER=['coffee','noncoffee','bestseller','frappe','refresher','milktea','cookies','cheesecake','cakes','cinnamon'];
-  var PASTRY_CATS=['cookies','cheesecake','cakes','cinnamon'];
+  var GROUP_ORDER=['coffee','noncoffee','bestseller','frappe','refresher','milktea','cookies','minicookies','cheesecake','cakes','cinnamon'];
+  var PASTRY_CATS=['cookies','minicookies','cheesecake','cakes','cinnamon'];
 
   function $(id){return document.getElementById(id)}
   function clone(o){return JSON.parse(JSON.stringify(o))}
