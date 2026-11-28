@@ -153,14 +153,15 @@
   .receipt .rt{border-top:1px dashed #999;margin-top:8px;padding-top:8px;font-weight:700;font-size:15px}
   .receipt .rf{text-align:center;border-top:1px dashed #999;margin-top:10px;padding-top:8px}
   kbd{display:inline-block;padding:1px 6px;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;background:var(--paper);font-size:11px}
-  .quick-dock{position:fixed;right:14px;top:50%;transform:translateY(-50%);z-index:45;display:flex;flex-direction:column;gap:7px;background:rgba(255,253,249,.94);border:1px solid var(--line);border-radius:999px;padding:8px;box-shadow:0 8px 26px rgba(42,27,18,.16)}
+  .quick-dock{position:fixed;left:224px;bottom:16px;z-index:45;display:flex;flex-direction:row;gap:6px;background:rgba(255,253,249,.94);border:1px solid var(--line);border-radius:16px;padding:6px;box-shadow:0 8px 26px rgba(42,27,18,.16)}
   .quick-dock button{width:46px;height:46px;border:1px solid var(--line);border-radius:50%;background:var(--paper);font-size:19px;line-height:1;display:grid;place-items:center}
   .quick-dock button:hover{border-color:var(--accent)}
   .quick-dock button.go{background:var(--accent);border-color:var(--accent);color:#FFFDF9}
   .cart-actions{display:none}
   @media (max-width:900px){
-    .quick-dock{top:auto;bottom:76px;right:10px;left:10px;transform:none;flex-direction:row;justify-content:space-around;border-radius:16px;padding:6px}
+    .quick-dock{top:auto;bottom:76px;right:10px;left:10px;flex-direction:row;justify-content:space-around;border-radius:16px;padding:6px}
     .quick-dock button{width:42px;height:42px;font-size:17px}
+    body.cart-open .quick-dock{display:none}
   }
   #printArea{display:none}
   @media print{
@@ -190,7 +191,7 @@
 </style>
 <script>
 (function(){
-  var BUILD='v2026-11-28-2030';window.__BUILD=BUILD;
+  var BUILD='v2026-11-28-2035';window.__BUILD=BUILD;
   function stamp(){var el=document.getElementById('buildTag');if(el)el.textContent=BUILD}
   function check(){
     fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
